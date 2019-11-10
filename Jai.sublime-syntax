@@ -47,8 +47,10 @@ contexts:
   
   string-literal:
     - meta_scope: string.quoted.double.jai
-    - match: '\\.|%'
+    - match: '\\.'
       scope: constant.character.escape.jai
+    - match: '%'
+      scope: constant.other.placeholder.jai
     - match: '"'
       pop: true
     
