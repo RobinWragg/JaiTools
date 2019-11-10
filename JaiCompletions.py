@@ -3,13 +3,6 @@ import sublime_plugin
 import re
 import os
 
-# TODO: autocomplete non-function names
-# TODO: gather from more than just the current view
-# TODO: make a better .sublime-syntax file
-# TODO: Rename functions to procedures.
-# TODO: How to display parameters when using "goto symbol" for procedures?
-# TODO: Maybe show line numbers alongside filename?
-
 class JaiCompletions(sublime_plugin.EventListener):
   # func_contents_pattern = re.compile('[^(),]+')
   raw_completions = []

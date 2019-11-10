@@ -1,0 +1,7 @@
+Roadmap
+
+Autocomplete non-function names
+Gather completions from more than just the current view
+Improve the .sublime-syntax file
+If possible, display parameters when using "goto symbol" for procedures
+Maybe show line numbers alongside filename?
