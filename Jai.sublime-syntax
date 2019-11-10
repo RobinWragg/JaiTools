@@ -8,101 +8,119 @@ file_extensions:
   - jai
 scope: source.jai
 
+variables:
+  decimal: '(?<!\w)(?:\d|_)+(?:\.(?:\d|_)+)?'
+  integer: '(?<!\w)\d+'
+  identifier: '\b\w+\b'
+  storagetype: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
+
 contexts:
   main:
-    - include: comment
-    - include: constant
-    - include: keyword
-    - include: struct
-    - include: enum
-    - include: cast
-    - match: '\b(\w+?)\('
-      captures:
-        1: variable.function.jai
-    - match: '\b(\w+?)\s*::\s*\('
-      captures:
-        1: entity.name.function.jai
-
-  comment:
-    - include: line-comment
+    # Comments
     - include: block-comment
-
-  line-comment:
     - match: //
       push:
         - meta_scope: comment.line.jai
         - match: $
           pop: true
-
+    
+    # Match a function definition 'func :: ' and look ahead to '->' or '{'
+    - match: '({{identifier}})\s*((?:::)|(?::=))\s*(?=\([^)]*?\)\s*(?:{|->))'
+      captures:
+        1: entity.name.function.jai
+        2: keyword.operator.assignment.jai
+      push: funcdef
+    
+    # Match a struct definition
+    - match: '({{identifier}})\s*((?:::)|(?::=))\s*(struct)\s*{'
+      captures:
+        1: entity.name.type.struct.jai
+        2: keyword.operator.assignment.jai
+        3: keyword.operator.assignment.jai
+    
+    # Match a new identifier
+    - match: '{{identifier}}\s*(?=:)'
+      push: constvar-declaration
+    
+    - match: '\breturn\s+'
+      scope: keyword.control.flow.return.jai
+      push: expression
+  
+  expression:
+    - match: '"'
+      push: string-literal
+    - match: '{{decimal}}'
+      scope: constant.numeric.float.jai
+    - match: '{{integer}}'
+      scope: constant.numeric.integer.jai
+    - match: '(?:\+|-|\*|/|<|>|!)=?'
+      scope: keyword.operator.arithmetic
+    - match: '(?=;)'
+      pop: true
+  
+  string-literal:
+    - meta_scope: string.quoted.double.jai
+    - match: \\.
+      scope: constant.character.escape.jai
+    - match: '"'
+      pop: true
+  
+  constvar-declaration:
+    - match: '(:)\s*({{storagetype}})?\s*(:|=)'
+      captures:
+        1: keyword.operator.assignment.jai
+        2: storage.type.jai
+        3: keyword.operator.assignment.jai
+      push: expression
+    - match: ';'
+      pop: true
+    
+      
   block-comment:
     - match: /\*
       push:
-        # Allow nested comments.
         - include: block-comment
         - meta_scope: comment.block.jai
         - match: \*/
           pop: true
-
-  constant:
-    - match: \btrue\b
-      scope: constant.language.true.jai
-    - match: \bfalse\b
-      scope: constant.language.false.jai
-    - match: \bnull\b
-      scope: constant.language.null.jai
-    - match: '(?<!\w)(0(?:x|h))(?:[[:xdigit:]]|_)+'
-      scope: constant.numeric.hexadecimal.jai
-    - match: '(?<!\w)(?:\d|_)+(?:\.(?:\d|_)+)?'
-      scope: constant.numeric.decimal.jai
-    - match: '".*?"'
-      scope: string.quoted.double.jai
-    - match: (#string) (.*)$
+  
+  funcdef:
+    - match: '\('
+      push: funcdef-params
+    - match: '\s*(?:(->)\s*({{storagetype}}))?\s*{' # match '-> int {'
       captures:
-        1: keyword.other.directive.jai
-        2: constant.other.stringdelimiter.jai
-      scope:
-      embed: herestring
-      escape: ^(\2)$
-      escape_captures:
-        1: constant.other.stringdelimiter.jai
-
-  herestring:
-    - meta_scope: string.unquoted.jai
-
-  keyword:
-    - match: '#\w*'
-      scope: keyword.other.directive.jai
-    - match: '@\S+'
-      scope: keyword.other.tag.jai
-    - match: '\b(?:if|then|else|case|for|while|break|continue|defer|return)\b'
-      scope: keyword.control.jai
-    - match: '\b(?:xx|size_of)\b'
-      scope: keyword.operator.word.jai
-    - match: '(?:\+|-|\*|/|<|>|!)=?'
-      scope: keyword.operator.jai
-    - match: ==|<<|\.\.|&&
-      scope: keyword.operator.jai
-    - match: '\b(?:using|it|it_index|push_context|inline|no_inline)\b'
-      scope: keyword.other.jai
-    - match: '---|\$\$'
-      scope: keyword.other.jai
-    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
+        1: keyword.other # '->' operator
+        2: storage.type.jai # return type
+      pop: true
+      
+  funcdef-params:
+    # - meta_content_scope: meta.function.parameters.jai
+    - match: '\s*{{identifier}}\s*:\s*' # parameter name
+      push: funcdef-param-type-name
+    - match: '\)'
+      pop: true
+  
+  funcdef-param-type-name:
+    - match: '\s*{{storagetype}}\s*(?=,|\))'
       scope: storage.type.jai
-
-  struct:
-    - match: (\w+)\s*::\s*(struct)\b
-      captures:
-        1: entity.name.type.struct.jai
-        2: storage.type.struct.jai
-
-  enum:
-    - match: (\w+)\s*::\s*(enum)\b
-      captures:
-        1: entity.name.type.enum.jai
-        2: storage.type.enum.jai
-
-  cast:
-    - match: \b(cast)\s*\((.+?)\)
-      captures:
-        1: keyword.operator.word.cast.jai
-        2: storage.type.jai
+      # TODO: match pointer operators etc
+      pop: true
+    
+    # - match: 'f'
+      # scope: testing.green.jai
+  
+  # after-new-identifier:
+  #   - match: '\s*::'
+  #     # scope: testing.assignment.jai
+  #     pop: true
+  #   - match: '\s*:='
+  #     # scope: testing.assignment.jai
+  #     pop: true
+  #   - match: '\s*'
+  #     scope: testing.assignment.jai
+  #     pop: true
+      
+      
+    
+    
+  
