@@ -2,10 +2,48 @@ import sublime
 import sublime_plugin
 import re
 import os
+import fnmatch
+import time
 
 class JaiCompletions(sublime_plugin.EventListener):
   # func_contents_pattern = re.compile('[^(),]+')
   raw_completions = []
+  
+  def get_all_jai_content(self, window):
+    jai_files = []
+    
+    # Load all open jai files from views in case they are dirty
+    for view in window.views():
+      file = {
+        'path': view.file_name()
+      }
+      
+      if file['path'] != None and file['path'][-4:] == '.jai':
+        region = view.find('[\w\W]*', 0)
+        
+        if region == None:
+          continue
+        
+        file['contents'] = view.substr(region)
+        jai_files.append(file)
+    
+    # Get all jai files in the open folders that aren't already in jai_files
+    # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
+    for folder in window.folders():
+      for root, dirs, files in os.walk(folder):
+        for file in fnmatch.filter(files, '*.jai'):
+          file = {
+            'path': os.path.join(root, file)
+          }
+            
+          if not any(f['path'] == file['path'] for f in jai_files):
+            
+            with open(file['path'], 'r') as f:
+              file['contents'] = f.read()
+            
+            jai_files.append(file)
+    
+    return jai_files
   
   def is_jai_view(self, view):
     file_name = view.file_name()
@@ -70,6 +108,13 @@ class JaiCompletions(sublime_plugin.EventListener):
     if not self.is_jai_view(view):
       return None
     
+    start_time = time.time()
+    
+    
+    
+    
+    self.get_all_jai_content(view.window())
+    
     self.raw_completions = []
     self.gather_raw_completions(view)
     
@@ -78,7 +123,13 @@ class JaiCompletions(sublime_plugin.EventListener):
     for raw in self.raw_completions:
       if raw['def'].lower().startswith(prefix.lower()):
         completions_to_return.append(self.build_completion_from_raw(raw))
-        
+    
+    
+    
+    
+    
+    delta_time_ms = int((time.time() - start_time) * 1000)
+    view.window().status_message('Jai completion took ' + str(delta_time_ms) + 'ms')
     return completions_to_return
 
 
