@@ -7,6 +7,7 @@ import time
 
 class JaiCompletions(sublime_plugin.EventListener):
   raw_completions = []
+  proc_pattern = re.compile(r'\b[a-zA-Z_]\w*\s*:\s*[:=]\s*\([\w\W]*?\)\s*(?:->\s*.*?\s*)?{')
   
   def get_all_jai_content(self, window):
     jai_content = {}
@@ -35,6 +36,10 @@ class JaiCompletions(sublime_plugin.EventListener):
               jai_content[file_path] = f.read()
     
     return jai_content
+  
+  def get_procs(self, string):
+    procs = self.proc_pattern.findall(string)
+    return procs
   
   def is_jai_view(self, view):
     file_name = view.file_name()
@@ -100,6 +105,12 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     if not self.is_jai_view(view):
       return None
+    
+    # Testing Code
+    # path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'TestFolder/TestFile.jai')
+    # with open(path, 'r') as f:
+      # file = f.read()
+    # self.get_procs(file)
       
     self.raw_completions = []
     self.gather_raw_completions(view)
