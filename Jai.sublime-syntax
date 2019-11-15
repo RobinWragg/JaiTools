@@ -61,14 +61,12 @@ contexts:
       scope: punctuation.section.parens.end.jai
     - match: '(?<=\))\s*->'
       scope: keyword.other.jai
-    - match: '[><=!]='
+    - match: '>>|<<|[&|]'
+      scope: keyword.operator.bitwise.jai
+    - match: '[><!]|=='
       scope: keyword.operator.logical.jai
-    - match: '<|>'
-      scope: keyword.operator.logical.jai
-    - match: '[+*/-]='
+    - match: '[+*/-]'
       scope: keyword.operator.arithmetic.jai
-    - match: '!'
-      scope: keyword.operator.logical.jai
     - match: '\s*:[=:]'
       scope: keyword.operator.assignment.jai
     - match: '(?<=\w)\s*:(?=.*?[:=])'
