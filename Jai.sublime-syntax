@@ -13,8 +13,10 @@ contexts:
     - include: common
     - match: '\b\w+\s*(?=:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
       scope: entity.name.function.jai
-    - match: '\b\w+\s*(?=:\s*[:=]\s*struct)'
+    - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.type.struct.jai
+    - match: '\b\w+(?=\s*:.*?[:=])'
+      scope: entity.name.type.jai
     - match: '{'
       push: block
   
