@@ -42,7 +42,7 @@ contexts:
       scope: variable.function.jai
     - match: '(?<!\w)(?:\d|_)+(?:\.(?:\d|_)+)?'
       scope: constant.numeric.jai
-    - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct)\b'
+    - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
     - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
       scope: storage.type.jai
