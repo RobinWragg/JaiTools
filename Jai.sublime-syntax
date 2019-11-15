@@ -3,6 +3,9 @@
 
 # http://www.sublimetext.com/docs/3/syntax.html
 
+# TODO: Jai's tags to be scoped as meta.annotation. I believe they begin with @.
+# TODO: Bitwise operators
+
 name: Jai
 file_extensions:
   - jai
@@ -15,8 +18,6 @@ contexts:
       scope: entity.name.function.jai
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.type.struct.jai
-    - match: '\b\w+(?=\s*:.*?[:=])'
-      scope: entity.name.type.jai
     - match: '{'
       push: block
   
@@ -34,18 +35,48 @@ contexts:
         - meta_scope: comment.line.jai
         - match: $
           pop: true
-    - match: '#\w+'
-      scope: meta.preprocessor.jai
+    - match: '(#)(\w+?)\b'
+      captures:
+        1: punctuation.preprocessor.jai, meta.preprocessor.jai
+        2: meta.preprocessor.jai
     - match: '"'
       push: string-literal
     - match: '\b\w+(?=\()'
       scope: variable.function.jai
-    - match: '(?<!\w)(?:\d|_)+(?:\.(?:\d|_)+)?'
+    - match: '(?<!\w)-?(?:\d|_)+(?:\.(?:\d|_)+)?'
       scope: constant.numeric.jai
+    - match: '\b(?:null|true|false)\b'
+      scope: constant.language.jai
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
     - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
       scope: storage.type.jai
+    - match: ';'
+      scope: punctuation.terminator.jai
+    - match: '(?<=\w)\.(?=[[[:alpha:]]_])'
+      scope: punctuation.accessor.jai
+    - match: '\['
+      scope: punctuation.section.brackets.begin.jai
+    - match: '\]'
+      scope: punctuation.section.parens.end.jai
+    - match: '(?<=\))\s*->'
+      scope: keyword.other.jai
+    - match: '[><=!]='
+      scope: keyword.operator.logical.jai
+    - match: '<|>'
+      scope: keyword.operator.logical.jai
+    - match: '[+*/-]='
+      scope: keyword.operator.arithmetic.jai
+    - match: '!'
+      scope: keyword.operator.logical.jai
+    - match: '\s*:[=:]'
+      scope: keyword.operator.assignment.jai
+    - match: '(?<=\w)\s*:(?=.*?[:=])'
+      scope: keyword.operator.assignment.jai
+    - match: ':(?=.+?;)'
+      scope: keyword.operator.assignment.jai
+    - match: '='
+      scope: keyword.operator.assignment.jai
   
   string-literal:
     - meta_scope: string.quoted.double.jai
