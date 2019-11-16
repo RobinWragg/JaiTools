@@ -29,36 +29,20 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     return paths
   
-  def get_file_contents(window):
-    pass
-  
-  def get_all_jai_content(self, window):
-    jai_content = {}
+  def get_file_contents(self, file_path, window):
     
-    # Load all open jai files from views in case they are dirty
-    for view in window.views():
-      file_path = view.file_name()
+    file_view = window.find_open_file(file_path)
+    
+    if file_view == None:
+      with open(file_path, 'r') as f:
+        return f.read()
+    else:
+      entire_buffer = file_view.find('[\w\W]*', 0)
       
-      if file_path != None and file_path[-4:] == '.jai':
-        entire_buffer = view.find('[\w\W]*', 0)
-        
-        if entire_buffer == None:
-          continue
-        
-        jai_content[file_path] = view.substr(entire_buffer)
-    
-    # Load all jai files in the open folders that aren't already in jai_content
-    # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
-    for folder in window.folders():
-      for root, dirs, files in os.walk(folder):
-        for file in fnmatch.filter(files, '*.jai'):
-          file_path = os.path.join(root, file)
-            
-          if not file_path in jai_content:
-            with open(file_path, 'r') as f:
-              jai_content[file_path] = f.read()
-    
-    return jai_content
+      if entire_buffer == None:
+        return ''
+      else:
+        return file_view.substr(entire_buffer)
   
   def get_procs(self, string):
     procs = self.proc_pattern.findall(string)
@@ -129,11 +113,6 @@ class JaiCompletions(sublime_plugin.EventListener):
     if not self.is_jai_view(view):
       return None
     
-    # Testing Code
-    # path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'TestFolder/TestFile.jai')
-    # with open(path, 'r') as f:
-      # file = f.read()
-    # self.get_procs(file)
       
     self.raw_completions = []
     self.gather_raw_completions(view)
