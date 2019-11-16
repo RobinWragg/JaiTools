@@ -71,17 +71,17 @@ class JaiCompletions(sublime_plugin.EventListener):
     return ''.join(non_comments)
   
   def strip_line_comments(self, jai_text):
-    return line_comment_pattern.sub('', jai_text)
+    return self.line_comment_pattern.sub('', jai_text)
   
   def strip_nonglobal_scopes(self, jai_text):
     return jai_text # TODO
   
   def get_procs_from_file_path(self, path):
     contents = self.get_file_contents(path)
-    contents = strip_block_comments(contents)
-    contents = strip_line_comments(contents)
-    contents = strip_nonglobal_scopes(contents)
-    return proc_pattern.findall(contents)
+    contents = self.strip_block_comments(contents)
+    contents = self.strip_line_comments(contents)
+    contents = self.strip_nonglobal_scopes(contents)
+    return self.proc_pattern.findall(contents)
     
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
@@ -93,22 +93,18 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     
     
-    
+    path = view.file_name()
+    procs = self.get_procs_from_file_path(path)
+    print(procs)
+    print()
     # entire_buffer = view.find('[\w\W]*', 0)
     # text = file_view.substr(entire_buffer)
     
     
     
     
-      
-    self.raw_completions = []
-    self.gather_raw_completions(view)
-    
     completions_to_return = []
     
-    for raw in self.raw_completions:
-      if raw['def'].lower().startswith(prefix.lower()):
-        completions_to_return.append(self.build_completion_from_raw(raw))
     
     # Report time spent building completions before returning
     delta_time_ms = int((time.time() - start_time) * 1000)
