@@ -73,9 +73,6 @@ class JaiCompletions(sublime_plugin.EventListener):
   def strip_line_comments(self, jai_text):
     return self.line_comment_pattern.sub('', jai_text)
   
-  def strip_nonglobal_scopes(self, jai_text):
-    return jai_text # TODO
-  
   def extract_procs_from_text(self, text):
     raw_procs = self.proc_pattern.findall(text)
     formatted_procs = []
@@ -83,12 +80,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     for raw_proc in raw_procs:
       identifier = raw_proc[0]
       
-      params = []
-      if len(raw_proc[1]) > 0:
-        params = raw_proc[1].split(',')
-        
-      for p in range(len(params)):
-        params[p] = params[p].strip()
+      params = self.params_pattern.findall(raw_proc[1])
       
       return_type = None
       if len(raw_proc[2]) > 0:
