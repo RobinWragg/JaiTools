@@ -8,7 +8,7 @@ import time
 class JaiCompletions(sublime_plugin.EventListener):
   raw_completions = []
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
-  proc_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\([\w\W]*?\)\s*(?:->\s*.*?\s*)?{')
+  proc_pattern = re.compile(r'\b(\w+\s*):\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
   
   def view_is_jai_syntax(self, view):
     return view.settings().get('syntax').find('Jai.sublime-syntax') >= 0
@@ -73,65 +73,32 @@ class JaiCompletions(sublime_plugin.EventListener):
   def strip_line_comments(self, jai_text):
     return line_comment_pattern.sub('', jai_text)
   
-  def get_procs(self, string):
-    procs = self.proc_pattern.findall(string)
-    return procs
-      
-  def gather_raw_completions(self, view):
-    func_def_pattern = '(?:\s|^)(\w+)\s*::\s*\(([^()"]*)\)\s*(?:->\s*([^{]+))?{'
-    formatter = '$1§$2'
-    
-    new_raw_completions = []
-    view.find_all(func_def_pattern, 0, '$1§$2§$3', new_raw_completions)
-    
-    file_name = view.file_name()
-    if file_name != None:
-      for completion in new_raw_completions:
-        self.raw_completions.append({'def': completion, 'file_name': file_name})
-    else:
-      for completion in new_raw_completions:
-        self.raw_completions.append({'def': completion})
+  def strip_nonglobal_scopes(self, jai_text):
+    return jai_text # TODO
   
-  def build_output_params(self, raw_params):
-    if raw_params == '':
-      return ''
-    
-    output_params = ''
-    
-    splitted_params = raw_params.split(',')
-    
-    for i in range(len(splitted_params)):
-      output_params += '${' + str(i+1) + ':'
-      output_params += splitted_params[i].strip()
-      output_params += '}'
-      if i < len(splitted_params) - 1:
-        output_params += ', '
-    
-    return output_params
-  
-  def build_completion_from_raw(self, raw):
-    splitted_completion = raw['def'].split('§')
-    name = splitted_completion[0]
-    params = splitted_completion[1]
-    return_type = splitted_completion[2]
-    
-    trigger = name + '(' + params + ')'
-    
-    if return_type != '':
-      trigger += ' -> ' + return_type.strip()
-      
-    if 'file_name' in raw:
-      trigger += ' \t' + os.path.basename(raw['file_name'])
-    
-    replacement = name + '(' + self.build_output_params(params) + ')'
-    
-    return [trigger, replacement]
+  def get_procs_from_file_path(self, path):
+    contents = self.get_file_contents(path)
+    contents = strip_block_comments(contents)
+    contents = strip_line_comments(contents)
+    contents = strip_nonglobal_scopes(contents)
+    return proc_pattern.findall(contents)
     
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
     
     if not self.view_is_jai_syntax(view):
       return None
+    
+    
+    
+    
+    
+    
+    # entire_buffer = view.find('[\w\W]*', 0)
+    # text = file_view.substr(entire_buffer)
+    
+    
+    
     
       
     self.raw_completions = []
