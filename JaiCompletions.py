@@ -6,15 +6,15 @@ import fnmatch
 import time
 
 class JaiCompletions(sublime_plugin.EventListener):
-  raw_completions = []
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
-  proc_pattern = re.compile(r'\b(\w+\s*):\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
+  proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
   
   def view_is_jai_syntax(self, view):
     return view.settings().get('syntax').find('Jai.sublime-syntax') >= 0
   
-  def get_all_jai_file_paths(self, window):
+  def get_all_jai_file_paths(self):
     paths = set()
+    window = sublime.active_window()
     
     # Get jai file paths from all open folders
     # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
@@ -33,9 +33,9 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     return paths
   
-  def get_file_contents(self, file_path, window):
+  def get_file_contents(self, file_path):
     
-    file_view = window.find_open_file(file_path)
+    file_view = sublime.active_window().find_open_file(file_path)
     
     if file_view == None:
       with open(file_path, 'r') as f:
@@ -76,12 +76,26 @@ class JaiCompletions(sublime_plugin.EventListener):
   def strip_nonglobal_scopes(self, jai_text):
     return jai_text # TODO
   
+  def extract_procs_from_text(self, text):
+    procs = self.proc_pattern.findall(text)
+    
+    for proc_i in range(len(procs)):
+      params = procs[proc_i][1].split(',')
+      
+      for param_i in range(len(params)):
+        params[param_i] = params[param_i].strip()
+      
+      procs[proc_i] = list(procs[proc_i])
+      procs[proc_i][1] = params
+      
+    return procs
+  
   def get_procs_from_file_path(self, path):
     contents = self.get_file_contents(path)
     contents = self.strip_block_comments(contents)
     contents = self.strip_line_comments(contents)
     contents = self.strip_nonglobal_scopes(contents)
-    return self.proc_pattern.findall(contents)
+    return self.extract_procs_from_text(contents)
     
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
