@@ -44,6 +44,28 @@ class JaiCompletions(sublime_plugin.EventListener):
       else:
         return file_view.substr(entire_buffer)
   
+  def strip_block_comments(self, jai_text):
+    non_comments = []
+    
+    comment_end_index = 0
+    block_comment_depth = 0
+    
+    for i in range(len(jai_text)):
+      if jai_text[i:i+2] == '/*':
+        if block_comment_depth == 0:
+          non_comment = jai_text[comment_end_index:i]
+          non_comments.append(non_comment)
+        block_comment_depth += 1
+      elif jai_text[i-2:i] == '*/':
+        block_comment_depth -= 1
+        if block_comment_depth == 0:
+          comment_end_index = i
+        if block_comment_depth < 0:
+          block_comment_depth = 0
+    
+    non_comments.append(jai_text[comment_end_index:])
+    return ''.join(non_comments)
+  
   def get_procs(self, string):
     procs = self.proc_pattern.findall(string)
     return procs
