@@ -83,28 +83,62 @@ class JaiCompletions(sublime_plugin.EventListener):
     for raw_proc in raw_procs:
       identifier = raw_proc[0]
       
-      params = None
+      params = []
       if len(raw_proc[1]) > 0:
         params = raw_proc[1].split(',')
+        
+      for p in range(len(params)):
+        params[p] = params[p].strip()
       
       return_type = None
       if len(raw_proc[2]) > 0:
         return_type = raw_proc[2]
       
-      formatted_procs.append((
-        identifier,
-        params,
-        return_type,
-        ))
+      formatted_procs.append({
+        'identifier': identifier,
+        'params': params,
+        'return': return_type
+        })
       
     return formatted_procs
   
-  def get_procs_from_file_path(self, path):
+  def make_completion_from_proc(self, proc, file_name):
+    trigger = proc['identifier'] + '('
+    result = proc['identifier'] + '('
+    
+    if len(proc['params']) > 0:
+      for p in range(len(proc['params'])):
+        if p > 0:
+          trigger += ', '
+          result += ', '
+          
+        trigger += proc['params'][p]
+        result += '${' + str(p+1) + ':' + proc['params'][p] + '}'
+    
+    trigger += ')'
+    result += ')'
+    
+    if proc['return'] != None:
+      trigger += ' -> ' + proc['return']
+    
+    trigger += '\t ' + file_name
+    
+    return [trigger, result]
+  
+  def get_completions_from_file_path(self, path):
     contents = self.get_file_contents(path)
     contents = self.strip_block_comments(contents)
     contents = self.strip_line_comments(contents)
     contents = self.strip_nonglobal_scopes(contents)
-    return self.extract_procs_from_text(contents)
+    
+    procs = self.extract_procs_from_text(contents)
+    
+    file_name = os.path.split(path)[1]
+    completions = []
+    for proc in procs:
+      completions.append(self.make_completion_from_proc(proc, file_name))
+      
+    return completions
     
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
@@ -112,32 +146,17 @@ class JaiCompletions(sublime_plugin.EventListener):
     if not self.view_is_jai_syntax(view):
       return None
     
-    
-    
-    
-    
-    path = view.file_name()
-    procs = self.get_procs_from_file_path(path)
-    print(procs)
-    print()
-    # entire_buffer = view.find('[\w\W]*', 0)
-    # text = file_view.substr(entire_buffer)
-    
-    
-    
-    
-    completions_to_return = []
-    
-    # completions_to_return = [['triggertriggertriggertriggertrigger\t hint', 'funcname(${1:param1}, ${2:param2})']]
-    
+    paths = self.get_all_jai_file_paths()
+    completions = []
+    for path in paths:
+      completions += self.get_completions_from_file_path(path)
     
     # Report time spent building completions before returning
     delta_time_ms = int((time.time() - start_time) * 1000)
     message = 'Jai autocompletion took ' + str(delta_time_ms) + 'ms'
     view.window().status_message(message)
     
-    return completions_to_return
-    # e.g. [['trigger\t hint', 'result']]
+    return completions
 
 
 
