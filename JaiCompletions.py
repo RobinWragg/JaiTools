@@ -127,9 +127,10 @@ class JaiCompletions(sublime_plugin.EventListener):
   
   def get_completions_from_file_path(self, path):
     contents = self.get_file_contents(path)
-    contents = self.strip_block_comments(contents)
-    contents = self.strip_line_comments(contents)
-    contents = self.strip_nonglobal_scopes(contents)
+    
+    # Currently unused in order to maximize speed
+    # contents = self.strip_block_comments(contents)
+    # contents = self.strip_line_comments(contents)
     
     procs = self.extract_procs_from_text(contents)
     
