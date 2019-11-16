@@ -10,6 +10,9 @@ class JaiCompletions(sublime_plugin.EventListener):
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   proc_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\([\w\W]*?\)\s*(?:->\s*.*?\s*)?{')
   
+  def view_is_jai_syntax(self, view):
+    return view.settings().get('syntax').find('Jai.sublime-syntax') >= 0
+  
   def get_all_jai_file_paths(self, window):
     paths = set()
     
@@ -73,15 +76,6 @@ class JaiCompletions(sublime_plugin.EventListener):
   def get_procs(self, string):
     procs = self.proc_pattern.findall(string)
     return procs
-  
-  def is_jai_view(self, view):
-    file_name = view.file_name()
-    if file_name != None and file_name[-4:].lower() == '.jai':
-      return True
-    elif view.settings().get('syntax').lower().find('Jai') >= 0:
-      return True
-    else:
-      return False
       
   def gather_raw_completions(self, view):
     func_def_pattern = '(?:\s|^)(\w+)\s*::\s*\(([^()"]*)\)\s*(?:->\s*([^{]+))?{'
@@ -136,7 +130,7 @@ class JaiCompletions(sublime_plugin.EventListener):
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
     
-    if not self.is_jai_view(view):
+    if not self.view_is_jai_syntax(view):
       return None
     
       
