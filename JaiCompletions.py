@@ -7,7 +7,30 @@ import time
 
 class JaiCompletions(sublime_plugin.EventListener):
   raw_completions = []
-  proc_pattern = re.compile(r'\b[a-zA-Z_]\w*\s*:\s*[:=]\s*\([\w\W]*?\)\s*(?:->\s*.*?\s*)?{')
+  proc_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\([\w\W]*?\)\s*(?:->\s*.*?\s*)?{')
+  
+  def get_all_jai_file_paths(self, window):
+    paths = set()
+    
+    # Get jai file paths from all open folders
+    # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
+    for folder in window.folders():
+      for root, dirs, files in os.walk(folder):
+        for file in fnmatch.filter(files, '*.jai'):
+          file_path = os.path.join(root, file)
+          paths.add(file_path)
+    
+    # Load all open jai files from views in case they're external files
+    for view in window.views():
+      file_path = view.file_name()
+      
+      if file_path != None and file_path[-4:] == '.jai':
+        paths.add(file_path)
+    
+    return paths
+  
+  def get_file_contents(window):
+    pass
   
   def get_all_jai_content(self, window):
     jai_content = {}
@@ -123,7 +146,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     # Report time spent building completions before returning
     delta_time_ms = int((time.time() - start_time) * 1000)
-    message = 'Jai completion took ' + str(delta_time_ms) + 'ms'
+    message = 'Jai autocompletion took ' + str(delta_time_ms) + 'ms'
     view.window().status_message(message)
     
     return completions_to_return
