@@ -7,6 +7,7 @@ import time
 
 class JaiCompletions(sublime_plugin.EventListener):
   raw_completions = []
+  line_comment_pattern = re.compile(r'//.*?(?=\n)')
   proc_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\([\w\W]*?\)\s*(?:->\s*.*?\s*)?{')
   
   def get_all_jai_file_paths(self, window):
@@ -65,6 +66,9 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     non_comments.append(jai_text[comment_end_index:])
     return ''.join(non_comments)
+  
+  def strip_line_comments(self, jai_text):
+    return line_comment_pattern.sub('', jai_text)
   
   def get_procs(self, string):
     procs = self.proc_pattern.findall(string)
