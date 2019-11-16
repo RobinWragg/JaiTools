@@ -77,18 +77,27 @@ class JaiCompletions(sublime_plugin.EventListener):
     return jai_text # TODO
   
   def extract_procs_from_text(self, text):
-    procs = self.proc_pattern.findall(text)
+    raw_procs = self.proc_pattern.findall(text)
+    formatted_procs = []
     
-    for proc_i in range(len(procs)):
-      params = procs[proc_i][1].split(',')
+    for raw_proc in raw_procs:
+      identifier = raw_proc[0]
       
-      for param_i in range(len(params)):
-        params[param_i] = params[param_i].strip()
+      params = None
+      if len(raw_proc[1]) > 0:
+        params = raw_proc[1].split(',')
       
-      procs[proc_i] = list(procs[proc_i])
-      procs[proc_i][1] = params
+      return_type = None
+      if len(raw_proc[2]) > 0:
+        return_type = raw_proc[2]
       
-    return procs
+      formatted_procs.append((
+        identifier,
+        params,
+        return_type,
+        ))
+      
+    return formatted_procs
   
   def get_procs_from_file_path(self, path):
     contents = self.get_file_contents(path)
@@ -119,6 +128,8 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     completions_to_return = []
     
+    # completions_to_return = [['triggertriggertriggertriggertrigger\t hint', 'funcname(${1:param1}, ${2:param2})']]
+    
     
     # Report time spent building completions before returning
     delta_time_ms = int((time.time() - start_time) * 1000)
@@ -126,6 +137,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     view.window().status_message(message)
     
     return completions_to_return
+    # e.g. [['trigger\t hint', 'result']]
 
 
 
