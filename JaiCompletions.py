@@ -8,6 +8,7 @@ import time
 class JaiCompletions(sublime_plugin.EventListener):
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
+  proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
   
   def view_is_jai(self, view):
     if view.settings().get('syntax').find('Jai.sublime-syntax') >= 0:
@@ -88,12 +89,11 @@ class JaiCompletions(sublime_plugin.EventListener):
     for raw_proc in raw_procs:
       identifier = raw_proc[0]
       
-      params = []
-      if len(raw_proc[1]) > 0:
-        params = raw_proc[1].split(',')
+      params = self.proc_params_pattern.findall(raw_proc[1])
       
-      for p in range(len(params)):
-        params[p] = params[p].strip()
+      # Handle the case of empty space inside parenthesese
+      if len(params) == 1 and params[0].strip() == '':
+        params = []
       
       return_type = None
       if len(raw_proc[2]) > 0:
