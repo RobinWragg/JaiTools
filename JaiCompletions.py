@@ -6,8 +6,10 @@ import fnmatch
 import time
 
 class JaiCompletions(sublime_plugin.EventListener):
+  definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?[{;]')
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
+  proc_differentiator_pattern = re.compile(r'\)\s*(?:->\s*[^{]+?)?\s*{$')
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
   
   def view_is_jai(self, view):
@@ -87,53 +89,60 @@ class JaiCompletions(sublime_plugin.EventListener):
   def strip_line_comments(self, jai_text):
     return self.line_comment_pattern.sub('', jai_text)
   
-  def extract_procs_from_text(self, text):
-    raw_procs = self.proc_pattern.findall(text)
-    formatted_procs = []
+  def make_completions_from_proc_components(self, proc_name, params, return_type, file_name):
+    trigger = proc_name + '('
+    result = proc_name + '('
     
-    for raw_proc in raw_procs:
-      identifier = raw_proc[0]
-      
-      params = self.proc_params_pattern.findall(raw_proc[1])
-      
-      # Handle the case of empty space inside parenthesese
-      if len(params) == 1 and params[0].strip() == '':
-        params = []
-      
-      return_type = None
-      if len(raw_proc[2]) > 0:
-        return_type = raw_proc[2]
-      
-      formatted_procs.append({
-        'identifier': identifier,
-        'params': params,
-        'return': return_type
-        })
-      
-    return formatted_procs
-  
-  def make_completion_from_proc(self, proc, file_name):
-    trigger = proc['identifier'] + '('
-    result = proc['identifier'] + '('
-    
-    if len(proc['params']) > 0:
-      for p in range(len(proc['params'])):
+    if len(params) > 0:
+      for p in range(len(params)):
         if p > 0:
           trigger += ', '
           result += ', '
           
-        trigger += proc['params'][p]
-        result += '${' + str(p+1) + ':' + proc['params'][p] + '}'
+        trigger += params[p]
+        result += '${' + str(p+1) + ':' + params[p] + '}'
     
     trigger += ')'
     result += ')'
     
-    if proc['return'] != None:
-      trigger += ' -> ' + proc['return']
+    if return_type != None:
+      trigger += ' -> ' + return_type
     
     trigger += '\t ' + file_name
     
-    return [trigger, result]
+    # proc completion
+    completions = [[trigger, result]]
+    
+    # param completions
+    for param in params:
+      completion = self.make_completion_from_variable_definition(param, file_name)
+      completions.append(completion)
+    
+    return completions
+  
+  def extract_definitions(self, jai_text):
+    defs = self.definition_pattern.findall(jai_text)
+    return list(set(defs))
+  
+  def make_completions_from_proc_definition(self, definition, file_name):
+    groups = self.proc_pattern.match(definition).groups()
+    
+    proc_name = groups[0]
+    params_str = groups[1]
+    return_type = groups[2]
+    
+    params_list = self.proc_params_pattern.findall(params_str)
+    
+    # Handle the case of empty space inside parentheses
+    if len(params_list) == 1 and params_list[0].strip() == '':
+      params = []
+    
+    return self.make_completions_from_proc_components(proc_name, params_list, return_type, file_name)
+  
+  def make_completion_from_variable_definition(self, definition, file_name):
+    colon_index = definition.find(':')
+    identifier = definition[:colon_index].strip()
+    return [identifier + '\t ' + file_name, identifier]
   
   def get_completions_from_file_path(self, path):
     contents = self.get_file_contents(path)
@@ -142,12 +151,18 @@ class JaiCompletions(sublime_plugin.EventListener):
     # contents = self.strip_block_comments(contents)
     # contents = self.strip_line_comments(contents)
     
-    procs = self.extract_procs_from_text(contents)
+    definitions = self.extract_definitions(contents)
     
-    file_name = os.path.split(path)[1]
     completions = []
-    for proc in procs:
-      completions.append(self.make_completion_from_proc(proc, file_name))
+    file_name = os.path.split(path)[1]
+    
+    for definition in definitions:
+      if self.proc_differentiator_pattern.search(definition) == None:
+        completion = self.make_completion_from_variable_definition(definition, file_name)
+        completions.append(completion)
+      else:
+        completions += self.make_completions_from_proc_definition(definition, file_name)
+        
       
     return completions
     
