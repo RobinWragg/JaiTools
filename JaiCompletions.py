@@ -120,7 +120,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     return completions
   
-  def extract_definitions(self, jai_text):
+  def extract_definitions_from_text(self, jai_text):
     defs = self.definition_pattern.findall(jai_text)
     return list(set(defs))
   
@@ -151,7 +151,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     # contents = self.strip_block_comments(contents)
     # contents = self.strip_line_comments(contents)
     
-    definitions = self.extract_definitions(contents)
+    definitions = self.extract_definitions_from_text(contents)
     
     completions = []
     file_name = os.path.split(path)[1]
