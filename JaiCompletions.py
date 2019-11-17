@@ -11,9 +11,14 @@ class JaiCompletions(sublime_plugin.EventListener):
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
   
   def view_is_jai(self, view):
-    if view.settings().get('syntax').find('Jai.sublime-syntax') >= 0:
-      return True
+    settings = view.settings()
     
+    if settings != None:
+      syntax = settings.get('syntax')
+      if syntax != None:
+        if syntax.find('Jai.sublime-syntax') >= 0:
+          return True
+
     path = view.file_name()
     
     if path != None and path[-4:].lower() == '.jai':
