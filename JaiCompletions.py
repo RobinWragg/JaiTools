@@ -9,8 +9,16 @@ class JaiCompletions(sublime_plugin.EventListener):
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
   
-  def view_is_jai_syntax(self, view):
-    return view.settings().get('syntax').find('Jai.sublime-syntax') >= 0
+  def view_is_jai(self, view):
+    if view.settings().get('syntax').find('Jai.sublime-syntax') >= 0:
+      return True
+    
+    path = view.file_name()
+    
+    if path != None and path[-4:].lower() == '.jai':
+      return True
+      
+    return False
   
   def get_all_jai_file_paths(self):
     paths = set()
@@ -20,7 +28,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
     for folder in window.folders():
       for root, dirs, files in os.walk(folder):
-        for file in fnmatch.filter(files, '*.jai'):
+        for file in fnmatch.filter(files, '*.jai'): # TODO: what about uppercase extensions?
           file_path = os.path.join(root, file)
           paths.add(file_path)
     
@@ -80,7 +88,12 @@ class JaiCompletions(sublime_plugin.EventListener):
     for raw_proc in raw_procs:
       identifier = raw_proc[0]
       
-      params = self.params_pattern.findall(raw_proc[1])
+      params = []
+      if len(raw_proc[1]) > 0:
+        params = raw_proc[1].split(',')
+      
+      for p in range(len(params)):
+        params[p] = params[p].strip()
       
       return_type = None
       if len(raw_proc[2]) > 0:
@@ -136,7 +149,7 @@ class JaiCompletions(sublime_plugin.EventListener):
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
     
-    if not self.view_is_jai_syntax(view):
+    if not self.view_is_jai(view):
       return None
     
     paths = self.get_all_jai_file_paths()
