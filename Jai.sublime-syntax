@@ -13,9 +13,10 @@ scope: source.jai
 
 contexts:
   main:
-    - include: common
     - match: '\b\w+\s*(?=:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
       scope: entity.name.function.jai
+      push: function-def
+    - include: common
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.type.struct.jai
     - match: '{'
@@ -49,8 +50,7 @@ contexts:
       scope: constant.language.jai
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
-    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
-      scope: storage.type.jai
+    - include: storage-type
     - match: ';'
       scope: punctuation.terminator.jai
     - match: '(?<=\w)\.(?=[[[:alpha:]]_])'
@@ -59,8 +59,6 @@ contexts:
       scope: punctuation.section.brackets.begin.jai
     - match: '\]'
       scope: punctuation.section.parens.end.jai
-    - match: '(?<=\))\s*->'
-      scope: keyword.other.jai
     - match: '>>|<<|[&|]'
       scope: keyword.operator.bitwise.jai
     - match: '[><!]|=='
@@ -92,6 +90,20 @@ contexts:
         - meta_scope: comment.block.jai
         - match: \*/
           pop: true
+  
+  storage-type:
+    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
+      scope: storage.type.jai
+  
+  function-def:
+    - meta_scope: meta.function.jai
+    - match: '::|:='
+      scope: keyword.operator.assignment.jai
+    - include: storage-type
+    - match: '->'
+      scope: keyword.other.jai
+    - match: '(?=\s*{)'
+      pop: true
     
 
 
