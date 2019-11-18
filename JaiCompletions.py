@@ -135,7 +135,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     
     # Handle the case of empty space inside parentheses
     if len(params_list) == 1 and params_list[0].strip() == '':
-      params = []
+      params_list = []
     
     return self.make_completions_from_proc_components(proc_name, params_list, return_type, file_name)
   
