@@ -9,70 +9,53 @@
 name: Jai
 file_extensions:
   - jai
+
 scope: source.jai
 
 contexts:
   main:
-    - match: '\b\w+\s*(?=:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
-      scope: entity.name.function.jai
-      push: function-def
     - include: common
-    - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
-      scope: entity.name.type.struct.jai
     - match: '{'
       push: block
   
   block:
     - include: common
+    - meta_scope: meta.block.jai
     - match: '{'
       push: block
     - match: '}'
       pop: true
 
   common:
-    - include: multiline-comment
-    - match: //
-      push:
-        - meta_scope: comment.line.jai
-        - match: $
-          pop: true
+    - include: comment
     - match: '(#)(\w+?)\b'
       captures:
         1: punctuation.preprocessor.jai, meta.preprocessor.jai
         2: meta.preprocessor.jai
-    - match: '"'
-      push: string-literal
-    - match: '\b\w+(?=\()'
-      scope: variable.function.jai
-    - match: '(?<!\w)-?(?:\d|_)+(?:\.(?:\d|_)+)?'
-      scope: constant.numeric.jai
-    - match: '\b(?:null|true|false)\b'
-      scope: constant.language.jai
+    # Function definition with line ending after before )
+    - match: '\b\w+\s*(?=:\s*[:=]\s*\(\s*\w+:)'
+      scope: entity.name.function.jai
+      push: function-def
+    # Function definition with line ending at (
+    - match: '\b\w+\s*(?=:\s*[:=]\s*\(\s*$)'
+      scope: entity.name.function.jai
+      push: function-def
+    # Full, one-line function definition
+    - match: '\b\w+\s*(?=:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
+      scope: entity.name.function.jai
+      push: function-def
+    - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
+      scope: entity.name.struct.jai
+      push: struct-def
+    - match: '\b\w+(?=\s*:.*?(?:[:=].*?)?;)'
+      scope: entity.name.variable.jai
+      push: variable-def
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
     - include: storage-type
+    - include: expression
     - match: ';'
       scope: punctuation.terminator.jai
-    - match: '(?<=\w)\.(?=[[[:alpha:]]_])'
-      scope: punctuation.accessor.jai
-    - match: '\['
-      scope: punctuation.section.brackets.begin.jai
-    - match: '\]'
-      scope: punctuation.section.parens.end.jai
-    - match: '>>|<<|[&|]'
-      scope: keyword.operator.bitwise.jai
-    - match: '[><!]|=='
-      scope: keyword.operator.logical.jai
-    - match: '[+*/-]'
-      scope: keyword.operator.arithmetic.jai
-    - match: '\s*:[=:]'
-      scope: keyword.operator.assignment.jai
-    - match: '(?<=\w)\s*:(?=.*?[:=])'
-      scope: keyword.operator.assignment.jai
-    - match: ':(?=.+?;)'
-      scope: keyword.operator.assignment.jai
-    - match: '='
-      scope: keyword.operator.assignment.jai
   
   string-literal:
     - meta_scope: string.quoted.double.jai
@@ -91,22 +74,93 @@ contexts:
         - match: \*/
           pop: true
   
+  comment:
+    - include: multiline-comment
+    - match: //
+      push:
+        - meta_scope: comment.line.jai
+        - match: $
+          pop: true
+  
+  expression:
+    - include: comment
+    - match: '"'
+      push: string-literal
+    - match: '\b\w+(?=\()'
+      scope: variable.function.jai
+    - match: '(?<!\w)-?(?:\d|_)+(?:\.(?:\d|_)+)?'
+      scope: constant.numeric.jai
+    - match: '\b(?:null|true|false)\b'
+      scope: constant.language.jai
+    - match: '(?<=\w)\.(?=[a-zA-Z_])'
+      scope: punctuation.accessor.jai
+    - match: '\['
+      scope: punctuation.section.brackets.begin.jai
+    - match: '\]'
+      scope: punctuation.section.brackets.end.jai
+    - match: '>>|<<|[&|]'
+      scope: keyword.operator.bitwise.jai
+    - match: '[><!]|=='
+      scope: keyword.operator.logical.jai
+    - match: '[+*/-]'
+      scope: keyword.operator.arithmetic.jai
+    - match: '\s*:[=:]'
+      scope: keyword.operator.assignment.jai
+    - match: '(?<=\w)\s*:(?=.*?[:=])'
+      scope: keyword.operator.assignment.jai
+    - match: ':(?=.+?;)'
+      scope: keyword.operator.assignment.jai
+    - match: '='
+      scope: keyword.operator.assignment.jai
+  
   storage-type:
     - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
       scope: storage.type.jai
   
-  function-def:
-    - meta_scope: meta.function.jai
-    - match: '::|:='
-      scope: keyword.operator.assignment.jai
+  params:
+    - meta_content_scope: meta.function.parameters.jai
+    - include: comment
     - include: storage-type
-    - match: '->'
+    - match: '\b\w+(?=\s*:)'
+      scope: variable.parameter.jai
+    - match: ':'
       scope: keyword.other.jai
-    - match: '(?=\s*{)'
+    - match: ','
+      scope: punctuation.separator.jai
+    - match: '\)'
       pop: true
     
+  function-def:
+    - meta_scope: meta.function.jai
+    - include: comment
+    - match: '::|:='
+      scope: keyword.operator.assignment.jai
+    - match: '\('
+      push: params
+    - include: storage-type
+    - match: '(?=\s*{)'
+      pop: true
 
-
+  struct-def:
+    - meta_scope: meta.struct.jai
+    - include: comment
+    - match: '::|:='
+      scope: keyword.operator.assignment.jai
+    - match: '\bstruct\b'
+      scope: keyword.jai
+    - match: '(?=\s*{)'
+      pop: true
+  
+  variable-def:
+    - meta_scope: meta.variable.jai
+    - include: comment
+    - include: storage-type
+    - include: expression
+    - match: ':|='
+      scope: keyword.operator.assignment.jai
+    - match: ';'
+      scope: punctuation.terminator.jai
+      pop: true
 
 
 
