@@ -32,16 +32,16 @@ contexts:
       captures:
         1: punctuation.preprocessor.jai, meta.preprocessor.jai
         2: meta.preprocessor.jai
-    # Function definition with line ending after before )
-    - match: '\b\w+\s*(?=:\s*[:=]\s*\(\s*\w+:)'
+    # Function definition with line ending before )
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
       scope: entity.name.function.jai
       push: function-def
-    # Function definition with line ending at (
-    - match: '\b\w+\s*(?=:\s*[:=]\s*\(\s*$)'
+    # Function definition with line ending immediately after (
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*$)'
       scope: entity.name.function.jai
       push: function-def
     # Full, one-line function definition
-    - match: '\b\w+\s*(?=:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
       scope: entity.name.function.jai
       push: function-def
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'

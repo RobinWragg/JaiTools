@@ -14,7 +14,7 @@
     <key>showInIndexedSymbolList</key>
     <integer>1</integer>
     <key>symbolIndexTransformation</key>
-    <string>s/.+/;</string>
+    <string>s/(\w+).+/$1/;</string>
   </dict>
 </dict>
 </plist>
