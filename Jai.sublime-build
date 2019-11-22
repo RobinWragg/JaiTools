@@ -1,5 +1,0 @@
-{
-	"shell_cmd": "python3 \"$packages/JaiTools/JaiBuildSystemShim.py\" \"$file\"",
-	"selector": "source.jai",
-	"working_dir": "$file_path"
-}
