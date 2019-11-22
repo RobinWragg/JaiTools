@@ -1,6 +1,6 @@
 # JaiTools
 
-Syntax highlighting, autocompletion, and Goto Symbol/Anything for the Jai language in Sublime Text 3.
+Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the Jai language in Sublime Text 3.
 
 Issues, pull requests and other contributions are very welcome!
 
