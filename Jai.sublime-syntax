@@ -47,6 +47,9 @@ contexts:
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.struct.jai
       push: struct-def
+    - match: '\b\w+(?=\s*:\s*[:=]\s*enum)'
+      scope: entity.name.enum.jai
+      push: enum-def
     - match: '\b\w+(?=\s*:.*?(?:[:=].*?)?;)'
       scope: entity.name.variable.jai
       push: variable-def
@@ -147,6 +150,16 @@ contexts:
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\bstruct\b'
+      scope: keyword.jai
+    - match: '(?=\s*{)'
+      pop: true
+  
+  enum-def:
+    - meta_scope: meta.enum.jai
+    - include: comment
+    - match: '::|:='
+      scope: keyword.operator.assignment.jai
+    - match: '\benum\b'
       scope: keyword.jai
     - match: '(?=\s*{)'
       pop: true
