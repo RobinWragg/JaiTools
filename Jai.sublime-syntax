@@ -91,8 +91,14 @@ contexts:
       push: string-literal
     - match: '\b\w+(?=\()'
       scope: variable.function.jai
-    - match: '(?<!\w)-?(?:\d|_)+(?:\.(?:\d|_)+)?'
-      scope: constant.numeric.jai
+    - match: '\b0h[a-fA-F0-9]+'
+      scope: constant.numeric.float.hexadecimal.jai
+    - match: '\b0x[a-fA-F0-9]+'
+      scope: constant.numeric.integer.hexadecimal.jai
+    - match: '\b\d+\.\d*'
+      scope: constant.numeric.float.decimal.jai
+    - match: '\b\d+'
+      scope: constant.numeric.integer.decimal.jai
     - match: '\b(?:null|true|false)\b'
       scope: constant.language.jai
     - match: '(?<=\w)\.(?=[a-zA-Z_])'
