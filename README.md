@@ -3,7 +3,6 @@
 Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the Jai language in Sublime Text 3.
 
 Planned work:
-* Syntax for here-strings
 * Improved handling of #hashtags and other metaprogramming labels
 
 Issues, pull requests and other contributions are very welcome!

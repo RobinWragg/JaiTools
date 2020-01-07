@@ -28,10 +28,24 @@ contexts:
 
   common:
     - include: comment
+
+    # Herestring literals.
+    # NOTE: Must have priority over general preprocessor rule.
+    - match: (#)(string) (.*)$
+      captures:
+        1: punctuation.preprocessor.jai, meta.preprocessor.jai
+        2: meta.preprocessor.jai
+        3: constant.other.stringdelimiter.jai
+      scope:
+      embed: herestring-content
+      escape: ^(\3)$
+      escape_captures:
+        1: constant.other.stringdelimiter.jai
     - match: '(#)(\w+?)\b'
       captures:
         1: punctuation.preprocessor.jai, meta.preprocessor.jai
         2: meta.preprocessor.jai
+
     # Function definition with line ending before )
     - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
       scope: entity.name.function.jai
@@ -60,6 +74,9 @@ contexts:
     - match: ';'
       scope: punctuation.terminator.jai
   
+  herestring-content:
+    - meta_scope: string.unquoted.jai
+
   string-literal:
     - meta_scope: string.quoted.double.jai
     - match: '\\.'
