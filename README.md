@@ -4,6 +4,7 @@ Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the
 
 Planned work:
 * Improved handling of #hashtags and other metaprogramming labels
+* Gather completions from Jai scratch buffers (files without a location on disk)
 
 Issues, pull requests and other contributions are very welcome!
 
