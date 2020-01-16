@@ -8,7 +8,7 @@ Current features are fully-functioning assuming the language's syntax doesn't ch
 
 This package will of course be updated going forward as the language changes.
 
-# Planned work
+## Planned Work
 
 * Improved handling of #hashtags and other metaprogramming labels
 * Gather completions from Jai scratch buffers (files without a location on disk)
