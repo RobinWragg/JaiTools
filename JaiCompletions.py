@@ -165,7 +165,13 @@ class JaiCompletions(sublime_plugin.EventListener):
         
       
     return completions
-    
+  
+  def report_indexing_duration(self, start_time_seconds):
+    # Report time spent building completions before returning
+    delta_time_ms = int((time.time() - start_time_seconds) * 1000)
+    message = 'Jai completion indexing took ' + str(delta_time_ms) + 'ms'
+    sublime.active_window().status_message(message)
+  
   def on_query_completions(self, view, prefix, locations):
     start_time = time.time()
     
@@ -177,10 +183,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     for path in paths:
       completions += self.get_completions_from_file_path(path)
     
-    # Report time spent building completions before returning
-    delta_time_ms = int((time.time() - start_time) * 1000)
-    message = 'Jai autocompletion took ' + str(delta_time_ms) + 'ms'
-    view.window().status_message(message)
+    self.report_indexing_duration(start_time)
     
     return completions
 
