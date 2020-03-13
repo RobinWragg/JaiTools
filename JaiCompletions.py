@@ -8,7 +8,6 @@ import time
 class JaiCompletions(sublime_plugin.EventListener):
   definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?[{;]')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
-  proc_differentiator_pattern = re.compile(r'\)\s*(?:->\s*[^{]+?)?\s*{$')
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   
@@ -156,7 +155,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     file_name = os.path.split(path)[1]
     
     for definition in definitions:
-      if self.proc_differentiator_pattern.search(definition) == None:
+      if self.proc_pattern.search(definition) == None:
         completion = self.make_completion_from_variable_definition(definition, file_name)
         completions.append(completion)
       else:
