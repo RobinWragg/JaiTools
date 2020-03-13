@@ -6,6 +6,10 @@ import fnmatch
 import time
 
 class JaiCompletions(sublime_plugin.EventListener):
+  completion_index = {}
+  
+  full_reindex_interval_secs = 60 * 10 # Ten minutes
+  last_full_reindex_secs = -full_reindex_interval_secs # Ensure re-indexing happens on launch
   definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?[{;]')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
@@ -27,8 +31,8 @@ class JaiCompletions(sublime_plugin.EventListener):
       
     return False
   
-  def get_all_jai_file_paths(self):
-    paths = set()
+  def get_all_index_keys(self):
+    index_keys = set()
     window = sublime.active_window()
     
     # Get jai file paths from all open folders
@@ -37,31 +41,31 @@ class JaiCompletions(sublime_plugin.EventListener):
       for root, dirs, files in os.walk(folder):
         for file in fnmatch.filter(files, '*.[jJ][aA][iI]'):
           file_path = os.path.join(root, file)
-          paths.add(file_path)
+          index_keys.add(file_path)
     
-    # Load all open jai files from views in case they're external files
+    # Load all open jai views in case they're unsaved or external files
     for view in window.views():
-      file_path = view.file_name()
-      
-      if file_path != None and file_path[-4:].lower() == '.jai':
-        paths.add(file_path)
+      if self.view_is_jai(view):
+        index_keys.add(self.get_view_index_key(view))
     
-    return paths
+    return index_keys
+  
+  def get_view_contents(self, view):
+    entire_buffer = view.find('[\w\W]*', 0)
+    
+    if entire_buffer == None:
+      return ''
+    else:
+      return view.substr(entire_buffer)
   
   def get_file_contents(self, file_path):
-    
     file_view = sublime.active_window().find_open_file(file_path)
     
     if file_view == None:
       with open(file_path, 'r') as f:
         return f.read()
     else:
-      entire_buffer = file_view.find('[\w\W]*', 0)
-      
-      if entire_buffer == None:
-        return ''
-      else:
-        return file_view.substr(entire_buffer)
+      return self.get_view_contents(file_view)
   
   def strip_block_comments(self, jai_text):
     non_comments = []
@@ -120,6 +124,9 @@ class JaiCompletions(sublime_plugin.EventListener):
     return completions
   
   def extract_definitions_from_text(self, jai_text):
+    jai_text = self.strip_block_comments(jai_text)
+    jai_text = self.strip_line_comments(jai_text)
+    
     defs = self.definition_pattern.findall(jai_text)
     return list(set(defs))
   
@@ -143,45 +150,106 @@ class JaiCompletions(sublime_plugin.EventListener):
     identifier = definition[:colon_index].strip()
     return [identifier + '\t ' + file_name, identifier]
   
-  def get_completions_from_file_path(self, path):
-    contents = self.get_file_contents(path)
-    
-    contents = self.strip_block_comments(contents)
-    contents = self.strip_line_comments(contents)
-    
-    definitions = self.extract_definitions_from_text(contents)
+  def get_completions_from_text(self, jai_text, file_name_for_user):
+    definitions = self.extract_definitions_from_text(jai_text)
     
     completions = []
-    file_name = os.path.split(path)[1]
     
     for definition in definitions:
       if self.proc_pattern.search(definition) == None:
-        completion = self.make_completion_from_variable_definition(definition, file_name)
+        completion = self.make_completion_from_variable_definition(definition, file_name_for_user)
         completions.append(completion)
       else:
-        completions += self.make_completions_from_proc_definition(definition, file_name)
+        completions += self.make_completions_from_proc_definition(definition, file_name_for_user)
         
-      
     return completions
   
-  def report_indexing_duration(self, start_time_seconds):
-    # Report time spent building completions before returning
-    delta_time_ms = int((time.time() - start_time_seconds) * 1000)
-    message = 'Jai completion indexing took ' + str(delta_time_ms) + 'ms'
-    sublime.active_window().status_message(message)
+  def get_view_index_key(self, view):
+    file_path = view.file_name()
+    
+    if file_path == None:
+      return view.buffer_id()
+    else:
+      return file_path
   
-  def on_query_completions(self, view, prefix, locations):
+  def index_view(self, view, is_async):
+    # If a full re-index hasn't been performed recently (see the value of
+    # full_reindex_interval_secs), and this function will not block the user (an async event),
+    # re-index everything in order to:
+    #  - Gather completions from files that are in the project but aren't open
+    #  - Remove deleted files (the API doesn't provide an event for file deletions)
+    #  - Index any file changes that were made outside of Sublime Text
+    if is_async and time.time() - self.last_full_reindex_secs > self.full_reindex_interval_secs:
+      self.reindex_everything()
+      return
+    
+    if not self.view_is_jai(view):
+      return
+    
+    index_key = self.get_view_index_key(view)
+    file_name_for_user = ''
+    
+    if isinstance(index_key, str):
+      # index_key is the file path
+      file_name_for_user = os.path.basename(index_key)
+      
+      # Ensure there is no reference to the buffer, as it would contain duplicate completions.
+      if view.buffer_id() in self.completion_index:
+        del self.completion_index[buffer_id]
+    else:
+      # index_key is the buffer ID, meaning there is no corresponding file on disk.
+      file_name_for_user = 'unsaved'
+    
+    jai_text = self.get_view_contents(view)
+    self.completion_index[index_key] = self.get_completions_from_text(jai_text, file_name_for_user)
+  
+  def reindex_everything(self):
     start_time = time.time()
     
+    new_completion_index = {}
+    all_index_keys = self.get_all_index_keys()
+    
+    # Split keys into file paths and buffer IDs to gather completions differently
+    file_paths = filter(lambda x: isinstance(x, str), all_index_keys)
+    buffer_ids = filter(lambda x: isinstance(x, int), all_index_keys)
+    
+    for path in file_paths:
+      jai_text = self.get_file_contents(path)
+      name_for_user = os.path.basename(path)
+      new_completion_index[path] = self.get_completions_from_text(jai_text, name_for_user)
+    
+    for buffer_id in buffer_ids:
+      # The API can't get text from the buffer directly, so find a view associated with it (if any).
+      for view in sublime.active_window().views():
+        if view.buffer_id() == buffer_id:
+          jai_text = self.get_view_contents(view)
+          new_completion_index[buffer_id] = self.get_completions_from_text(jai_text, 'unsaved')
+          break
+    
+    self.completion_index = new_completion_index
+    self.last_full_reindex_secs = time.time()
+    
+    duration_ms = int((time.time() - start_time) * 1000)
+    print('JaiTools: Full re-indexing of completions took ' + str(duration_ms) + 'ms')
+    
+  def on_pre_close(self, view):
+    self.index_view(view, True)
+  
+  def on_deactivated_async(self, view):
+    self.index_view(view, True)
+  
+  def on_activated_async(self, view):
+    self.index_view(view, True)
+  
+  def on_query_completions(self, view, prefix, locations):
     if not self.view_is_jai(view):
       return None
     
-    paths = self.get_all_jai_file_paths()
-    completions = []
-    for path in paths:
-      completions += self.get_completions_from_file_path(path)
+    self.index_view(view, False)
     
-    self.report_indexing_duration(start_time)
+    completions = []
+    for key in self.completion_index.keys():
+      completions += self.completion_index[key]
     
     return completions
 
