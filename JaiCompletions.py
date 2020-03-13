@@ -36,7 +36,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
     for folder in window.folders():
       for root, dirs, files in os.walk(folder):
-        for file in fnmatch.filter(files, '*.jai'): # TODO: what about uppercase extensions?
+        for file in fnmatch.filter(files, '*.[jJ][aA][iI]'):
           file_path = os.path.join(root, file)
           paths.add(file_path)
     
@@ -44,7 +44,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     for view in window.views():
       file_path = view.file_name()
       
-      if file_path != None and file_path[-4:] == '.jai':
+      if file_path != None and file_path[-4:].lower() == '.jai':
         paths.add(file_path)
     
     return paths
