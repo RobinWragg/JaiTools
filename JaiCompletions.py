@@ -7,10 +7,10 @@ import time
 
 class JaiCompletions(sublime_plugin.EventListener):
   definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?[{;]')
-  line_comment_pattern = re.compile(r'//.*?(?=\n)')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
   proc_differentiator_pattern = re.compile(r'\)\s*(?:->\s*[^{]+?)?\s*{$')
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
+  line_comment_pattern = re.compile(r'//.*?(?=\n)')
   
   def view_is_jai(self, view):
     settings = view.settings()
@@ -147,9 +147,8 @@ class JaiCompletions(sublime_plugin.EventListener):
   def get_completions_from_file_path(self, path):
     contents = self.get_file_contents(path)
     
-    # Currently unused in order to maximize speed
-    # contents = self.strip_block_comments(contents)
-    # contents = self.strip_line_comments(contents)
+    contents = self.strip_block_comments(contents)
+    contents = self.strip_line_comments(contents)
     
     definitions = self.extract_definitions_from_text(contents)
     
