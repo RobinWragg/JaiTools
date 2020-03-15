@@ -16,7 +16,7 @@ Goto Symbol (ctrl+R/cmd+R) shows all the top-level symbols in the file including
 
 ## Planned Work
 
-- [x] More efficient completion indexing
+- [x] More efficient file indexing
 - [x] Regex performance improvements
 - [ ] Show procedure parameters in "Goto Symbol in Project" (shift+ctrl+R/shift+cmd+R)
 - [ ] Gather completions for enum members correctly
