@@ -30,7 +30,7 @@ contexts:
     - include: comment
 
     # Herestring literals.
-    # NOTE: Must have priority over general preprocessor rule.
+    # NOTE: Must have priority over general preprocessor rule
     - match: (#)(string) (.*)$
       captures:
         1: punctuation.preprocessor.jai, meta.preprocessor.jai
@@ -41,6 +41,8 @@ contexts:
       escape: ^(\3)$
       escape_captures:
         1: constant.other.stringdelimiter.jai
+    
+    # Preprocessor-style directives (#run, #must, etc)
     - match: '(#)(\w+?)\b'
       captures:
         1: punctuation.preprocessor.jai, meta.preprocessor.jai
