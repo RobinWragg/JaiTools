@@ -194,7 +194,8 @@ class JaiCompletions(sublime_plugin.EventListener):
       file_name_for_user = os.path.basename(index_key)
       
       # Ensure there is no reference to the buffer, as it would contain duplicate completions.
-      if view.buffer_id() in self.completion_index:
+      buffer_id = view.buffer_id()
+      if buffer_id in self.completion_index:
         del self.completion_index[buffer_id]
     else:
       # index_key is the buffer ID, meaning there is no corresponding file on disk.
