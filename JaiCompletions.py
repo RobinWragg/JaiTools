@@ -1,8 +1,6 @@
-import sublime
+from .JaiToolsCommon import *
 import sublime_plugin
 import re
-import os
-import fnmatch
 import time
 
 class JaiCompletions(sublime_plugin.EventListener):
@@ -15,57 +13,17 @@ class JaiCompletions(sublime_plugin.EventListener):
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   
-  def view_is_jai(self, view):
-    settings = view.settings()
-    
-    if settings != None:
-      syntax = settings.get('syntax')
-      if syntax != None:
-        if syntax.find('Jai.sublime-syntax') >= 0:
-          return True
-
-    path = view.file_name()
-    
-    if path != None and path[-4:].lower() == '.jai':
-      return True
-      
-    return False
-  
   def get_all_index_keys(self):
-    index_keys = set()
-    window = sublime.active_window()
-    
     # Get jai file paths from all open folders
     # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
-    for folder in window.folders():
-      for root, dirs, files in os.walk(folder):
-        for file in fnmatch.filter(files, '*.[jJ][aA][iI]'):
-          file_path = os.path.join(root, file)
-          index_keys.add(file_path)
+    index_keys = get_all_jai_project_file_paths()
     
     # Load all open jai views in case they're unsaved or external files
-    for view in window.views():
-      if self.view_is_jai(view):
+    for view in sublime.active_window().views():
+      if view_is_jai(view):
         index_keys.add(self.get_view_index_key(view))
     
     return index_keys
-  
-  def get_view_contents(self, view):
-    entire_buffer = view.find('[\w\W]*', 0)
-    
-    if entire_buffer == None:
-      return ''
-    else:
-      return view.substr(entire_buffer)
-  
-  def get_file_contents(self, file_path):
-    file_view = sublime.active_window().find_open_file(file_path)
-    
-    if file_view == None:
-      with open(file_path, 'r') as f:
-        return f.read()
-    else:
-      return self.get_view_contents(file_view)
   
   def strip_block_comments(self, jai_text):
     non_comments = []
@@ -183,7 +141,7 @@ class JaiCompletions(sublime_plugin.EventListener):
       self.reindex_everything()
       return
     
-    if not self.view_is_jai(view):
+    if not view_is_jai(view):
       return
     
     index_key = self.get_view_index_key(view)
@@ -201,7 +159,7 @@ class JaiCompletions(sublime_plugin.EventListener):
       # index_key is the buffer ID, meaning there is no corresponding file on disk.
       file_name_for_user = 'unsaved'
     
-    jai_text = self.get_view_contents(view)
+    jai_text = get_view_contents(view)
     self.completion_index[index_key] = self.get_completions_from_text(jai_text, file_name_for_user)
   
   def reindex_everything(self):
@@ -215,7 +173,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     buffer_ids = filter(lambda x: isinstance(x, int), all_index_keys)
     
     for path in file_paths:
-      jai_text = self.get_file_contents(path)
+      jai_text = get_file_contents(path)
       name_for_user = os.path.basename(path)
       new_completion_index[path] = self.get_completions_from_text(jai_text, name_for_user)
     
@@ -223,7 +181,7 @@ class JaiCompletions(sublime_plugin.EventListener):
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
       for view in sublime.active_window().views():
         if view.buffer_id() == buffer_id:
-          jai_text = self.get_view_contents(view)
+          jai_text = get_view_contents(view)
           new_completion_index[buffer_id] = self.get_completions_from_text(jai_text, 'unsaved')
           break
     
@@ -243,7 +201,7 @@ class JaiCompletions(sublime_plugin.EventListener):
     self.index_view(view, True)
   
   def on_query_completions(self, view, prefix, locations):
-    if not self.view_is_jai(view):
+    if not view_is_jai(view):
       return None
     
     self.index_view(view, False)
