@@ -1,0 +1,5 @@
+{
+  "target": "run_jai_build_file",
+  "selector": "source.jai",
+  "cancel": {"kill": true}
+}

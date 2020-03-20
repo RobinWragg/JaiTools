@@ -2,6 +2,24 @@ import sublime
 import os
 import fnmatch
 
+PROJECT_KEY_build_file_path = 'jaitools_build_file_path'
+
+def get_common_parent_dir(paths):
+  if len(paths) == 1:
+    return os.path.dirname(paths[0])
+  
+  finished_path_lists = []
+  paths_components = [path.split(os.path.sep) for path in paths]
+  min_lengths = min(len(p) for p in paths_components)
+
+  for i in range(min_lengths):
+    s = set(p[i] for p in paths_components)
+    if len(s) != 1:
+      break
+    finished_path_lists.append(s.pop())
+
+  return os.path.sep.join(finished_path_lists)
+
 def view_is_jai(view):
   settings = view.settings()
   
