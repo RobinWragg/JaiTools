@@ -50,9 +50,9 @@ class RunJaiBuildFileCommand(sublime_plugin.WindowCommand):
     # A lock is used to ensure only one thread is touching the output panel at a time
     with self.panel_lock:
       # Creating the panel implicitly clears any previous contents
-      self.panel = self.window.create_output_panel('jai_results')
+      self.panel = self.window.create_output_panel(PANEL_KEY_build_results.replace('output.', ''))
       self.panel.set_syntax_file('Packages/JaiTools/Jai.sublime-syntax')
-      self.window.run_command('show_panel', {'panel': 'output.jai_results'})
+      self.window.run_command('show_panel', {'panel': PANEL_KEY_build_results})
       
       args = ['jai', build_file_path]
       # args = ['echo', build_file_path]

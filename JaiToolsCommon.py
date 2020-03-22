@@ -2,6 +2,7 @@ import sublime
 import os
 import fnmatch
 
+PANEL_KEY_build_results = 'output.jai_build_results'
 PROJECT_KEY_build_file_path = 'jaitools_build_file_path'
 
 def get_common_parent_dir(paths):
