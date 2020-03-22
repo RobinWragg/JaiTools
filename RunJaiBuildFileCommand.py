@@ -4,10 +4,6 @@ import subprocess
 import threading
 import re
 
-# REWRITE
-# TODO: If no build file is set, show error message with sublime.error_message('JaiTools: No build file has been chosen for this project. Run "JaiTools: Set Build File" from the Command Palette and try building again.')
-# TODO: If the chosen build file doesn't exist, show error message with sublime.error_message('JaiTools: The following build file doesn't exist:\n<path>\nRun "JaiTools: Set Build File" from the Command Palette and try building again.')
-
 class RunJaiBuildFileCommand(sublime_plugin.WindowCommand):
   result_file_regex = r'^File "([^"]+)" line (\d+) col (\d+)'
   result_line_regex = r'^\s+line (\d+) col (\d+)'
@@ -43,11 +39,11 @@ class RunJaiBuildFileCommand(sublime_plugin.WindowCommand):
     build_file_path = self.try_to_get_build_file_path()
     
     if build_file_path == None:
-      sublime.error_message('JaiTools: No build file has been chosen for this project. Run "JaiTools: Set Build File" from the Command Palette and try again.')
+      sublime.error_message('JaiTools: No build file has been chosen for this project. Run "JaiTools: Set Build File" from the Command Palette and try building again.')
       return
     
     if not os.path.isfile(build_file_path):
-      invalid_build_file_path_message = 'JaiTools: The following build file doesn\'t exist:\n\n' + build_file_path + '\n\nRun "JaiTools: Set Build File" from the Command Palette to select a new one.'
+      invalid_build_file_path_message = 'JaiTools: The following build file doesn\'t exist:\n\n' + build_file_path + '\n\nRun "JaiTools: Set Build File" from the Command Palette to select a new one, and try building again.'
       sublime.error_message(invalid_build_file_path_message)
       return
     
@@ -81,7 +77,7 @@ class RunJaiBuildFileCommand(sublime_plugin.WindowCommand):
         'result_line_regex',
         self.result_line_regex
       )
-      settings.set('result_base_dir', working_dir) # TODO: this should be the project folder, or if multiple folders exist, the parent folder common to all project folders.
+      # settings.set('result_base_dir', working_dir)
 
     if self.process is not None:
       self.process.terminate()
