@@ -65,10 +65,10 @@ contexts:
       push: function-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.struct.jai
-      push: struct-def
+      push: struct-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*enum)'
       scope: entity.name.enum.jai
-      push: enum-def
+      push: enum-definition
     - include: variable-declaration
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
@@ -170,10 +170,10 @@ contexts:
       scope: keyword.operator.assignment.jai
     - match: '\('
       push: function-parameters
-    - match: '(?=\s*{)'
+    - match: '(?=\s*[{;])'
       pop: true
 
-  struct-def:
+  struct-definition:
     - meta_scope: meta.struct.jai
     - include: comment
     - match: '::|:='
@@ -183,7 +183,7 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
-  enum-def:
+  enum-definition:
     - meta_scope: meta.enum.jai
     - include: comment
     - match: '::|:='
