@@ -144,14 +144,23 @@ contexts:
   function-parameters:
     - meta_content_scope: meta.function.parameters.jai
     - include: comment
-    - match: '\b(\w+)\s*?(:)\s*?(.+?)(?=,|\))'
+    - match: '\b(\w+)\s*?(:)\s*'
       captures:
         1: variable.parameter.jai
         2: keyword.other.jai
-        3: storage.type.jai
+      push: function-parameter-type
     - match: ','
       scope: punctuation.separator.jai
     - match: '\)'
+      pop: true
+  
+  function-parameter-type:
+    - include: comment
+    - match: '[^,|\)|/]+' # param types are terminated with ',' ')' or a comment ('/').
+      scope: storage.type.jai
+    - match: '(?=,)'
+      pop: true
+    - match: '(?=\))'
       pop: true
     
   function-definition:
