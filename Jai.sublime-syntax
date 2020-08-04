@@ -66,9 +66,7 @@ contexts:
     - match: '\b\w+(?=\s*:\s*[:=]\s*enum)'
       scope: entity.name.enum.jai
       push: enum-def
-    - match: '\b\w+(?=\s*:.*?(?:[:=].*?)?;)'
-      scope: entity.name.variable.jai
-      push: variable-def
+    - include: variable-declaration
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
     - include: storage-type
@@ -145,14 +143,14 @@ contexts:
     - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
       scope: storage.type.jai
   
-  params:
+  function-parameters:
     - meta_content_scope: meta.function.parameters.jai
     - include: comment
-    - include: storage-type
-    - match: '\b\w+(?=\s*:)'
-      scope: variable.parameter.jai
-    - match: ':'
-      scope: keyword.other.jai
+    - match: '\b(\w+)\s*?(:)\s*?(.+?)(?=,|\))'
+      captures:
+        1: variable.parameter.jai
+        2: keyword.other.jai
+        3: storage.type.jai
     - match: ','
       scope: punctuation.separator.jai
     - match: '\)'
@@ -164,7 +162,7 @@ contexts:
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\('
-      push: params
+      push: function-parameters
     - include: storage-type
     - match: '(?=\s*{)'
       pop: true
@@ -189,17 +187,21 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
-  variable-def:
+  variable-declaration:
+    - match: '\b(\w+)\s*(:)(.*?)(?=(?:[:=].*?)?;)'
+      captures:
+        1: entity.name.variable.jai
+        2: keyword.operator.assignment.jai
+        3: storage.type.jai
+      push: equalsign-then-expression-then-semicolon
+  
+  equalsign-then-expression-then-semicolon:
     - meta_scope: meta.variable.jai
     - include: comment
-    - include: storage-type
     - include: expression
-    - match: ':|='
-      scope: keyword.operator.assignment.jai
     - match: ';'
       scope: punctuation.terminator.jai
       pop: true
-
 
 
 
