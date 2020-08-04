@@ -54,15 +54,15 @@ contexts:
     # Function definition with line ending before )
     - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
       scope: entity.name.function.jai
-      push: function-def
+      push: function-definition
     # Function definition with line ending immediately after (
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*$)'
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*(?:$|\/))'
       scope: entity.name.function.jai
-      push: function-def
+      push: function-definition
     # Full, one-line function definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
       scope: entity.name.function.jai
-      push: function-def
+      push: function-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.struct.jai
       push: struct-def
@@ -154,7 +154,7 @@ contexts:
     - match: '\)'
       pop: true
     
-  function-def:
+  function-definition:
     - meta_scope: meta.function.jai
     - include: comment
     - match: '::|:='
