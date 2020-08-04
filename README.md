@@ -18,7 +18,8 @@ Goto Symbol (ctrl+R/cmd+R) shows all the top-level symbols in the file including
 
 - [x] More efficient file indexing
 - [x] Regex performance improvements
-- [ ] Show procedure parameters in "Goto Symbol in Project" (shift+ctrl+R/shift+cmd+R)
+- [ ] Recognise syntax for parameters with default values
+- [ ] Add setting to disable completions
 - [ ] Gather completions for enum members correctly
 - [ ] Improved handling of #hashtags and other metaprogramming labels
 - [ ] Add support for structs with parameters

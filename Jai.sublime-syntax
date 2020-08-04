@@ -6,6 +6,9 @@
 # TODO: Jai's tags to be scoped as meta.annotation. I believe they begin with @.
 # TODO: Bitwise operators
 
+# Builtin storage types:
+# Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
+
 name: Jai
 file_extensions:
   - jai
@@ -51,27 +54,24 @@ contexts:
     # Function definition with line ending before )
     - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
       scope: entity.name.function.jai
-      push: function-def
+      push: function-definition
     # Function definition with line ending immediately after (
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*$)'
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*(?:$|\/))'
       scope: entity.name.function.jai
-      push: function-def
+      push: function-definition
     # Full, one-line function definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
       scope: entity.name.function.jai
-      push: function-def
+      push: function-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.struct.jai
-      push: struct-def
+      push: struct-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*enum)'
       scope: entity.name.enum.jai
-      push: enum-def
-    - match: '\b\w+(?=\s*:.*?(?:[:=].*?)?;)'
-      scope: entity.name.variable.jai
-      push: variable-def
+      push: enum-definition
+    - include: variable-declaration
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
-    - include: storage-type
     - include: expression
     - match: ';'
       scope: punctuation.terminator.jai
@@ -141,35 +141,39 @@ contexts:
     - match: '='
       scope: keyword.operator.assignment.jai
   
-  storage-type:
-    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
-      scope: storage.type.jai
-  
-  params:
+  function-parameters:
     - meta_content_scope: meta.function.parameters.jai
     - include: comment
-    - include: storage-type
-    - match: '\b\w+(?=\s*:)'
-      scope: variable.parameter.jai
-    - match: ':'
-      scope: keyword.other.jai
+    - match: '\b(\w+)\s*?(:)\s*'
+      captures:
+        1: variable.parameter.jai
+        2: keyword.other.jai
+      push: function-parameter-type
     - match: ','
       scope: punctuation.separator.jai
     - match: '\)'
       pop: true
+  
+  function-parameter-type:
+    - include: comment
+    - match: '[^,|\)|/]+' # param types are terminated with ',' ')' or a comment ('/').
+      scope: storage.type.jai
+    - match: '(?=,)'
+      pop: true
+    - match: '(?=\))'
+      pop: true
     
-  function-def:
+  function-definition:
     - meta_scope: meta.function.jai
     - include: comment
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\('
-      push: params
-    - include: storage-type
-    - match: '(?=\s*{)'
+      push: function-parameters
+    - match: '(?=\s*[{;])'
       pop: true
 
-  struct-def:
+  struct-definition:
     - meta_scope: meta.struct.jai
     - include: comment
     - match: '::|:='
@@ -179,7 +183,7 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
-  enum-def:
+  enum-definition:
     - meta_scope: meta.enum.jai
     - include: comment
     - match: '::|:='
@@ -189,17 +193,21 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
-  variable-def:
+  variable-declaration:
+    - match: '\b(\w+)\s*(:)(.*?)(?=(?:[:=].*?)?;)'
+      captures:
+        1: entity.name.variable.jai
+        2: keyword.operator.assignment.jai
+        3: storage.type.jai
+      push: equalsign-then-expression-then-semicolon
+  
+  equalsign-then-expression-then-semicolon:
     - meta_scope: meta.variable.jai
     - include: comment
-    - include: storage-type
     - include: expression
-    - match: ':|='
-      scope: keyword.operator.assignment.jai
     - match: ';'
       scope: punctuation.terminator.jai
       pop: true
-
 
 
 
