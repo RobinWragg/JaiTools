@@ -6,6 +6,9 @@
 # TODO: Jai's tags to be scoped as meta.annotation. I believe they begin with @.
 # TODO: Bitwise operators
 
+# Builtin storage types:
+# Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
+
 name: Jai
 file_extensions:
   - jai
@@ -69,7 +72,6 @@ contexts:
     - include: variable-declaration
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
-    - include: storage-type
     - include: expression
     - match: ';'
       scope: punctuation.terminator.jai
@@ -139,10 +141,6 @@ contexts:
     - match: '='
       scope: keyword.operator.assignment.jai
   
-  storage-type:
-    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
-      scope: storage.type.jai
-  
   function-parameters:
     - meta_content_scope: meta.function.parameters.jai
     - include: comment
@@ -163,7 +161,6 @@ contexts:
       scope: keyword.operator.assignment.jai
     - match: '\('
       push: function-parameters
-    - include: storage-type
     - match: '(?=\s*{)'
       pop: true
 
