@@ -15,6 +15,10 @@ file_extensions:
 
 scope: source.jai
 
+variables:
+  # Variable names must by a-z only!
+  typename: '\b\w+?\b'
+
 contexts:
   main:
     - include: common
@@ -51,25 +55,14 @@ contexts:
         1: punctuation.preprocessor.jai, meta.preprocessor.jai
         2: meta.preprocessor.jai
 
-    # Function definition with line ending before )
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
-      scope: entity.name.function.jai
-      push: function-definition
-    # Function definition with line ending immediately after (
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*(?:$|\/))'
-      scope: entity.name.function.jai
-      push: function-definition
-    # Full, one-line function definition
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
-      scope: entity.name.function.jai
-      push: function-definition
+    - include: check-for-function-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
       scope: entity.name.struct.jai
       push: struct-definition
     - match: '\b\w+(?=\s*:\s*[:=]\s*enum)'
       scope: entity.name.enum.jai
       push: enum-definition
-    - include: variable-declaration
+    - include: check-for-variable-definition
     - match: '\b(?:return|if|then|else|for|break|continue|it|it_index|struct|using)\b'
       scope: keyword.jai
     - include: expression
@@ -141,6 +134,30 @@ contexts:
     - match: '='
       scope: keyword.operator.assignment.jai
   
+  check-for-function-definition:
+    # Function definition with line ending before )
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
+      scope: entity.name.function.jai
+      push: function-definition
+    # Function definition with line ending immediately after (
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*(?:$|\/))'
+      scope: entity.name.function.jai
+      push: function-definition
+    # Full, one-line function definition
+    - match: '\b\w+(?=\s*:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
+      scope: entity.name.function.jai
+      push: function-definition
+    
+  function-definition:
+    - meta_scope: meta.function.jai
+    - include: comment
+    - match: '::|:='
+      scope: keyword.operator.assignment.jai
+    - match: '\('
+      push: function-parameters
+    - match: '(?=\s*[{;])'
+      pop: true
+  
   function-parameters:
     - meta_content_scope: meta.function.parameters.jai
     - include: comment
@@ -156,21 +173,11 @@ contexts:
   
   function-parameter-type:
     - include: comment
-    - match: '[^,|\)|/]+' # param types are terminated with ',' ')' or a comment ('/').
+    - match: '{{typename}}' # param types are terminated with ',' ')' or a comment ('/').
       scope: storage.type.jai
     - match: '(?=,)'
       pop: true
     - match: '(?=\))'
-      pop: true
-    
-  function-definition:
-    - meta_scope: meta.function.jai
-    - include: comment
-    - match: '::|:='
-      scope: keyword.operator.assignment.jai
-    - match: '\('
-      push: function-parameters
-    - match: '(?=\s*[{;])'
       pop: true
 
   struct-definition:
@@ -193,15 +200,16 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
-  variable-declaration:
-    - match: '\b(\w+)\s*(:)(.*?)(?=(?:[:=].*?)?;)'
+  check-for-variable-definition:
+    - match: '\b(\w+)\s*(:)(.*?)(?:(:|=)|(?=;))'
       captures:
         1: entity.name.variable.jai
         2: keyword.operator.assignment.jai
         3: storage.type.jai
-      push: equalsign-then-expression-then-semicolon
+        4: keyword.operator.assignment.jai
+      push: expression-then-semicolon
   
-  equalsign-then-expression-then-semicolon:
+  expression-then-semicolon:
     - meta_scope: meta.variable.jai
     - include: comment
     - include: expression
