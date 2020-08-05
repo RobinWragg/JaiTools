@@ -173,7 +173,7 @@ contexts:
   
   function-parameter-type:
     - include: comment
-    - match: '{{typename}}' # param types are terminated with ',' ')' or a comment ('/').
+    - match: '\s*{{typename}}\s*' # param types are terminated with ',' ')' or a comment ('/').
       scope: storage.type.jai
     - match: '(?=,)'
       pop: true
@@ -201,7 +201,7 @@ contexts:
       pop: true
   
   check-for-variable-definition:
-    - match: '\b(\w+)\s*(:)(.*?)(?:(:|=)|(?=;))'
+    - match: '\b(\w+)\s*(:)\s*({{typename}})\s*(?:(:|=)|(?=;))'
       captures:
         1: entity.name.variable.jai
         2: keyword.operator.assignment.jai
