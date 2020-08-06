@@ -9,6 +9,7 @@
 
 # Builtin storage types for reference (not used directly by this file):
 # Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
+# Unlike the C++ syntax, we recognise type names based on their context in code, which means we can appropriately highlight user-defined types (structs)
 
 name: Jai
 file_extensions:
