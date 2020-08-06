@@ -4,8 +4,8 @@
 # Official syntax tutorial: http://www.sublimetext.com/docs/3/syntax.html
 # Official scope names: https://www.sublimetext.com/docs/3/scope_naming.html
 
-# TODO: Jai's tags to be scoped as the various 'annotation' scopes mentioned in the doc above. I believe they begin with @.
-# TODO: Use keyword.control.import.jai for includes/imports like Sublime's C++ syntax does
+# TODO: Jai's tags to be scoped as the various 'annotation' scopes mentioned in the doc above. I believe they begin with @. We should wait until their possible locations are well-defined before implementing them.
+# TODO: namespacing and other visibility-based features
 
 # Builtin storage types for reference (not used directly by this file):
 # Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
@@ -52,6 +52,8 @@ contexts:
         1: constant.other.stringdelimiter.jai
     
     # Preprocessor-style directives (#run, #must, etc)
+    - match: '#import\s*'
+      scope: keyword.control.import.jai
     - match: '#(?:\w+\b)?'
       scope: meta.preprocessor.jai
     
