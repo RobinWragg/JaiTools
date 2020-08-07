@@ -4,7 +4,8 @@
 # Official syntax tutorial: http://www.sublimetext.com/docs/3/syntax.html
 # Official scope names: https://www.sublimetext.com/docs/3/scope_naming.html
 
-# TODO: Jai's tags to be scoped as the various 'annotation' scopes mentioned in the doc above. I believe they begin with @. We should wait until their possible locations are well-defined before implementing them.
+# TODO: Arrays
+# TODO: Parameterized types
 # TODO: namespacing and other visibility-based features
 
 # Builtin storage types for reference (not used directly by this file):
@@ -38,25 +39,7 @@ contexts:
       pop: true
 
   common:
-    - include: comment
-
-    # Herestring literals.
-    # NOTE: Must have priority over general preprocessor rule
-    - match: '#string\s+({{herestring_delimiter}})$'
-      captures:
-        1: constant.other.stringdelimiter.jai
-      scope: meta.preprocessor.jai
-      embed: herestring_content
-      escape: ^(\1)$
-      escape_captures:
-        1: constant.other.stringdelimiter.jai
-    
-    # Preprocessor-style directives (#run, #must, etc)
-    - match: '#import\s*'
-      scope: keyword.control.import.jai
-    - match: '#(?:\w+\b)?'
-      scope: meta.preprocessor.jai
-    
+    - include: escapes
     - include: keyword
     - match: ','
       scope: punctuation.separator.jai
@@ -71,6 +54,32 @@ contexts:
     - include: expression
     - match: ';'
       scope: punctuation.terminator.jai
+  
+  escapes:
+    - include: comment
+
+    # Herestring literals.
+    # NOTE: Must have priority over general preprocessor rule
+    - match: '#string\s+({{herestring_delimiter}})(?=\s)'
+      captures:
+        1: constant.other.stringdelimiter.jai
+      scope: meta.preprocessor.jai
+      embed: herestring_content
+      escape: ^(\1)$
+      escape_captures:
+        1: constant.other.stringdelimiter.jai
+    
+    # Preprocessor-style directives (#run, #must, etc)
+    - match: '#import\s*'
+      scope: keyword.control.import.jai
+    - match: '#(?:\w+\b)?'
+      scope: meta.preprocessor.jai
+    
+    # Tags
+    - match: '(@)(?:\w+\b)?'
+      captures:
+        1: punctuation.definition.annotation.jai
+      scope: meta.annotation.jai
   
   herestring_content:
     - meta_scope: string.unquoted.jai
@@ -115,7 +124,7 @@ contexts:
       scope: keyword.control.jai
   
   expression:
-    - include: comment
+    - include: escapes
     - include: keyword
     - match: '\b(?:it|it_index)\b'
       scope: variable.language.jai
@@ -160,7 +169,7 @@ contexts:
     
   function_definition:
     - meta_scope: meta.function.jai
-    - include: comment
+    - include: escapes
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\('
@@ -173,7 +182,7 @@ contexts:
   
   function_parameters:
     - meta_content_scope: meta.function.parameters.jai
-    - include: comment
+    - include: escapes
     - match: '({{var_or_func_name}})\s*(:)\s*'
       captures:
         1: variable.parameter.jai
@@ -185,7 +194,7 @@ contexts:
       pop: true
   
   function_return_specifier:
-    - include: comment
+    - include: escapes
     - match: '\s*({{var_or_func_name}})\s*(:)\s*({{type_name}})\s*'
       captures:
         1: variable.return-value.jai
@@ -199,7 +208,7 @@ contexts:
       pop: true
   
   function_parameter_type:
-    - include: comment
+    - include: escapes
     - match: '\s*{{type_name}}\s*'
       scope: storage.type.jai
     - match: '(?=,)'
@@ -209,7 +218,7 @@ contexts:
 
   struct_definition:
     - meta_scope: meta.struct.jai
-    - include: comment
+    - include: escapes
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\bstruct\b'
@@ -219,7 +228,7 @@ contexts:
   
   enum_definition:
     - meta_scope: meta.enum.jai
-    - include: comment
+    - include: escapes
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\benum\b'
@@ -238,7 +247,6 @@ contexts:
   
   expression_then_semicolon:
     - meta_scope: meta.variable.jai
-    - include: comment
     - include: expression
     - match: ';'
       scope: punctuation.terminator.jai
