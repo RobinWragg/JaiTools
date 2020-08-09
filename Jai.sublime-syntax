@@ -7,6 +7,7 @@
 # TODO: Arrays
 # TODO: Parameterized types
 # TODO: namespacing and other visibility-based features
+# TODO: Figure out how to enable goto struct definition/references.
 
 # Builtin storage types for reference (not used directly by this file):
 # Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
@@ -134,6 +135,7 @@ contexts:
       scope: constant.language.jai
     - match: '{{var_or_func_name}}(?=\()'
       scope: variable.function.jai
+      push: function_call_arguments
     - match: '{{var_or_func_name}}'
       scope: variable.other.jai
     - match: '\b0h[a-fA-F0-9]+'
@@ -152,6 +154,12 @@ contexts:
       scope: punctuation.section.brackets.begin.jai
     - match: '\]'
       scope: punctuation.section.brackets.end.jai
+  
+  function_call_arguments:
+    - meta_scope: meta.function-call.jai
+    - include: expression
+    - match: '\)'
+      pop: true
   
   check_for_function_definition:
     # Function definition with line ending before )
