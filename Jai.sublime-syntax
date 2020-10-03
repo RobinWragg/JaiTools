@@ -7,7 +7,6 @@
 # TODO: Arrays
 # TODO: Parameterized types
 # TODO: namespacing and other visibility-based features
-# TODO: Figure out how to enable goto struct definition/references.
 
 # Builtin storage types for reference (not used directly by this file):
 # Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64

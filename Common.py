@@ -5,20 +5,6 @@ import fnmatch
 PANEL_KEY_build_results = 'output.jai_build_results'
 PROJECT_KEY_build_file_path = 'jaitools_build_file_path'
 
-# Placeholder build results
-build_results = [
-  {
-    'file_path': '/Users/robin/Library/Application Support/Sublime Text 3/Packages/JaiTools/nocommit.jai',
-    'region': sublime.Region(50, 60),
-    'message': 'this is the first error'
-  },
-  {
-    'file_path': '/Users/robin/Library/Application Support/Sublime Text 3/Packages/JaiTools/nocommit.jai',
-    'region': sublime.Region(100, 120),
-    'message': 'this is the second error'
-  }
-]
-
 def get_common_parent_dir(paths):
   if len(paths) == 1:
     return os.path.dirname(paths[0])

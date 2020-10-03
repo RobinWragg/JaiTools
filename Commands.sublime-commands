@@ -1,14 +1,6 @@
 [
   {
-    "caption": "JaiTools: Set Build File",
-    "command": "set_jai_build_file"
-  },
-  {
-    "caption": "JaiTools: Read Me",
-    "command": "jai_tools_read_me"
-  },
-  {
-    "caption": "JaiTools: Show Build Results",
-    "command": "jai_tools_show_build_results"
+    "caption": "JaiTools: Build",
+    "command": "jai_tools_build"
   }
 ]

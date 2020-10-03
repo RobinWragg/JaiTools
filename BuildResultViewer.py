@@ -7,6 +7,9 @@ from .Common import *
 # result_regions = list( map(lambda x: x['region'], build_results) )
 # view.add_regions('jai_build_results', result_regions, 'invalid')
 
+# Dummy. This needs to be populated using the data obtained in JaiToolBuildCommand.add_build_results_to_views().
+build_results = []
+
 class BuildResultViewer(sublime_plugin.EventListener):
 	
 	def region_contains_point(self, region, point):
