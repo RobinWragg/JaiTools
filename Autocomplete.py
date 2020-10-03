@@ -1,9 +1,9 @@
-from .JaiToolsCommon import *
+from .Common import *
 import sublime_plugin
 import re
 import time
 
-class JaiCompletions(sublime_plugin.EventListener):
+class Autocomplete(sublime_plugin.EventListener):
   completion_index = {}
   
   full_reindex_interval_secs = 60 * 10 # Ten minutes
