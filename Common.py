@@ -2,8 +2,7 @@ import sublime
 import os
 import fnmatch
 
-PANEL_KEY_build_results = 'output.jai_build_results'
-PROJECT_KEY_build_file_path = 'jaitools_build_file_path'
+build_result_file_regex = "^(.+?):(\\d+)(?:,(\\d+))?:\\s*(?:Error:\\s*)(.+?)$"
 
 def get_common_parent_dir(paths):
   if len(paths) == 1:

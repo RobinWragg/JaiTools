@@ -1,5 +1,4 @@
 {
   "target": "jai_tools_build",
-  "selector": "source.jai",
-  "cancel": {"kill": true}
+  "selector": "source.jai"
 }
