@@ -4,9 +4,9 @@
 # Official syntax tutorial: http://www.sublimetext.com/docs/3/syntax.html
 # Official scope names: https://www.sublimetext.com/docs/3/scope_naming.html
 
-# TODO: Arrays
 # TODO: Parameterized types
 # TODO: namespacing and other visibility-based features
+# TODO: better for-loop syntax
 
 # Builtin storage types for reference (not used directly by this file):
 # Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
@@ -19,7 +19,6 @@ file_extensions:
 scope: source.jai
 
 variables:
-  # Variable names must by a-z only!
   type_name: '(?:\b|\$)\w+?\b'
   var_or_func_name: '\b[a-zA-Z_]\w*?\b'
   herestring_delimiter: '[\w\W]+'
@@ -118,7 +117,7 @@ contexts:
       scope: keyword.operator.arithmetic.jai
     - match: '='
       scope: keyword.operator.assignment.jai
-    - match: '\b(?:struct|using|\.\.)\b'
+    - match: '(?:\bstruct\b|\busing\b|\.\.)'
       scope: keyword.other.jai
     - match: '\b(?:cast|type_of)(?:,\w+)?(?=\()'
       scope: keyword.operator.word.jai
@@ -136,7 +135,12 @@ contexts:
       push: string_literal
     - match: '\b(?:null|true|false)\b'
       scope: constant.language.jai
-    - match: '{{var_or_func_name}}(?:,no_check)?(?=\()'
+    - match: '({{var_or_func_name}})(\[)'
+      captures:
+        1: variable.other.jai
+        2: punctuation.section.brackets.begin.jai
+      push: array_subscript
+    - match: '{{var_or_func_name}}(?=\()'
       scope: variable.function.jai
       push: function_call_arguments
     - match: '{{var_or_func_name}}'
@@ -155,10 +159,6 @@ contexts:
       captures:
         1: punctuation.accessor.jai
         2: variable.other.member.jai
-    - match: '\['
-      scope: punctuation.section.brackets.begin.jai
-    - match: '\]'
-      scope: punctuation.section.brackets.end.jai
   
   function_call_arguments:
     - meta_scope: meta.function-call.jai
@@ -249,7 +249,26 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
+  array_subscript:
+    - match: '\['
+      scope: punctuation.section.brackets.begin.jai
+      push: array_subscript
+    - include: expression
+    - match: '\]'
+      scope: punctuation.section.brackets.end.jai
+      pop: true
+  
+  array_declaration:
+    - meta_scope: meta.variable.jai
+    - include: array_subscript
+    - include: expression_then_semicolon
+  
   check_for_variable_definition:
+    - match: '({{var_or_func_name}})\s*(:)\s*(?=\[)'
+      captures:
+        1: entity.name.variable.jai
+        2: keyword.operator.assignment.jai
+      push: array_declaration
     - match: '({{var_or_func_name}})\s*(:)\s*({{type_name}})?\s*(?:(:|=)|(?=;))'
       captures:
         1: entity.name.variable.jai
