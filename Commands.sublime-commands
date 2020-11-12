@@ -2,9 +2,5 @@
 	{
 		"caption": "JaiTools: Read Me",
 		"command": "open_jai_tools_readme"
-	},
-	{
-		"caption": "JaiTools: Set Build File",
-		"command": "set_jai_build_file"
 	}
 ]
