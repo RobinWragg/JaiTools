@@ -20,7 +20,7 @@ scope: source.jai
 
 variables:
   # Variable names must by a-z only!
-  type_name: '\b\w+?\b'
+  type_name: '(?:\b|\$)\w+?\b'
   var_or_func_name: '\b[a-zA-Z_]\w*?\b'
   herestring_delimiter: '[\w\W]+'
 
@@ -118,8 +118,10 @@ contexts:
       scope: keyword.operator.arithmetic.jai
     - match: '='
       scope: keyword.operator.assignment.jai
-    - match: '\b(?:struct|using)\b'
+    - match: '\b(?:struct|using|\.\.)\b'
       scope: keyword.other.jai
+    - match: '\b(?:cast|type_of)(?:,\w+)?(?=\()'
+      scope: keyword.operator.word.jai
     - match: '\b(?:return|if|then|else|for|while|break|continue)\b'
       scope: keyword.control.jai
   
@@ -128,22 +130,26 @@ contexts:
     - include: keyword
     - match: '\b(?:it|it_index)\b'
       scope: variable.language.jai
+    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
+      scope: storage.type.jai
     - match: '"'
       push: string_literal
     - match: '\b(?:null|true|false)\b'
       scope: constant.language.jai
-    - match: '{{var_or_func_name}}(?=\()'
+    - match: '{{var_or_func_name}}(?:,no_check)?(?=\()'
       scope: variable.function.jai
       push: function_call_arguments
     - match: '{{var_or_func_name}}'
       scope: variable.other.jai
-    - match: '\b0h[a-fA-F0-9]+'
+    - match: '\b0h[a-fA-F0-9_]*'
       scope: constant.numeric.float.hexadecimal.jai
-    - match: '\b0x[a-fA-F0-9]+'
+    - match: '\b0x[a-fA-F0-9_]*'
       scope: constant.numeric.integer.hexadecimal.jai
-    - match: '\b\d+\.\d*'
+    - match: '\b0b[01_]*'
+      scope: constant.numeric.integer.hexadecimal.jai
+    - match: '\b\d[0-9_]*\.[0-9_]+'
       scope: constant.numeric.float.decimal.jai
-    - match: '\b\d+'
+    - match: '\b\d[0-9_]*'
       scope: constant.numeric.integer.decimal.jai
     - match: '(?<=\w)(\.)({{var_or_func_name}})'
       captures:
