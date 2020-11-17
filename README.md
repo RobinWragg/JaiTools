@@ -20,17 +20,12 @@ Goto Symbol (ctrl+R/cmd+R) shows all the top-level symbols in the file including
 
 ## Planned Work
 
-- [x] More efficient file indexing
-- [x] Regex performance improvements
-- [ ] Recognise syntax for parameters with default values
-- [ ] Add setting to disable completions
-- [ ] Gather completions for enum members correctly
-- [ ] Improved handling of #hashtags and other metaprogramming labels
-- [ ] Add support for structs with parameters
-- [ ] Gather completions from Jai scratch buffers (files without a location on disk)
-- [ ] Integrate with Sublime Text's build system in order to support in-code errors and warnings
-- [ ] Better support for Jai's polymorphism features
-- [ ] Smart struct-member and enum-member inspection
+- An overhaul of the .sublime-syntax file, including consolidated syntax tests which can be executed by both Jai and Sublime Text. This is particularly important because the language's syntax isn't set in stone yet.
+- Add Jai's standard library code to the autocompletion system.
+- Hover over a struct to see its members.
+- A "quick build" feature, for executing the compiler on the current Jai file.
+- Syntax highlighting for Jai's build output.
+- Features for enabling the user to add their custom building requirements to their project in a hassle-free way, including showing errors and warnings in-line with code.
 
 Suggestions, issues, pull requests and other contributions are very welcome!
 
