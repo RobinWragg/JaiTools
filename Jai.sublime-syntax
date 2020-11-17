@@ -187,6 +187,7 @@ contexts:
     - match: '::|:='
       scope: keyword.operator.assignment.jai
     - match: '\('
+      scope: punctuation.section.parameters.begin.jai
       push: function_parameters
     - match: '\s*->\s*'
       scope: keyword.other.jai
@@ -200,11 +201,12 @@ contexts:
     - match: '({{var_or_func_name}})\s*(:)\s*'
       captures:
         1: variable.parameter.jai
-        2: keyword.operator.assignment.jai
+        2: punctuation.separator.jai
       push: function_parameter_type
     - match: ','
       scope: punctuation.separator.jai
     - match: '\)'
+      scope: punctuation.section.parameters.end.jai
       pop: true
   
   function_return_specifier:
@@ -223,6 +225,9 @@ contexts:
   
   function_parameter_type:
     - include: escapes
+    - match: '\s*\['
+      scope: punctuation.section.brackets.begin.jai
+      push: array_subscript
     - match: '\s*{{type_name}}\s*'
       scope: storage.type.jai
     - match: '(?=,)'
@@ -262,17 +267,19 @@ contexts:
   array_declaration:
     - meta_scope: meta.variable.jai
     - include: array_subscript
+    - match: '\s*{{type_name}}\s*'
+      scope: storage.type.jai
     - include: expression_then_semicolon
   
   check_for_variable_definition:
     - match: '({{var_or_func_name}})\s*(:)\s*(?=\[)'
       captures:
-        1: entity.name.variable.jai
+        1: variable.other.jai
         2: keyword.operator.assignment.jai
       push: array_declaration
     - match: '({{var_or_func_name}})\s*(:)\s*({{type_name}})?\s*(?:(:|=)|(?=;))'
       captures:
-        1: entity.name.variable.jai
+        1: variable.other.jai
         2: keyword.operator.assignment.jai
         3: storage.type.jai
         4: keyword.operator.assignment.jai
