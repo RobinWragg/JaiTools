@@ -4,6 +4,7 @@ import re
 import time
 
 class Autocomplete(sublime_plugin.EventListener):
+  gather_from_unopen_files = False
   completion_index = {}
   
   full_reindex_interval_secs = 60 * 10 # Ten minutes
@@ -14,9 +15,11 @@ class Autocomplete(sublime_plugin.EventListener):
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   
   def get_all_index_keys(self):
+    index_keys = set()
+    
     # Get jai file paths from all open folders
-    # TODO: Rewrite this with recursive glob if ST3 upgrades Python to 3.5+
-    index_keys = get_all_jai_project_file_paths()
+    if self.gather_from_unopen_files:
+      index_keys = get_all_jai_project_file_paths()
     
     # Load all open jai views in case they're unsaved or external files
     for view in sublime.active_window().views():
@@ -89,7 +92,12 @@ class Autocomplete(sublime_plugin.EventListener):
     return list(set(defs))
   
   def make_completions_from_proc_definition(self, definition, file_name):
-    groups = self.proc_pattern.match(definition).groups()
+    match = self.proc_pattern.match(definition)
+    
+    if match == None:
+      return []
+    
+    groups = match.groups()
     
     proc_name = groups[0]
     params_str = groups[1]
@@ -163,6 +171,8 @@ class Autocomplete(sublime_plugin.EventListener):
     self.completion_index[index_key] = self.get_completions_from_text(jai_text, file_name_for_user)
   
   def reindex_everything(self):
+    print('JaiTools: Starting re-indexing of completions')
+    
     start_time = time.time()
     
     new_completion_index = {}

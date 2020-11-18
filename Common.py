@@ -67,7 +67,7 @@ def get_file_contents(file_path, char_count=None):
   
   # Load from the view buffer if it exists
   if file_view == None:
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
       if char_count == None:
         return f.read()
       else:
