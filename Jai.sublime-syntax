@@ -51,19 +51,19 @@ contexts:
       scope: constant.language.jai
   
   numeric_constant:
-    - match: '\b0[xbhXBH][0-9a-fA-F_]*' # constant
-      scope: constant.numeric.jai
-    - match: '(?<=[^.0-9_a-zA-Z])\.[0-9_]+' # constant
-      scope: constant.numeric.jai
-    - match: '(?<=[^.0-9_a-zA-Z])[0-9][0-9_]*\.?[.0-9_]*' # constant
-      scope: constant.numeric.jai
+    - match: '\b0[xbhXBH][0-9a-fA-F_]*'
+      scope: constant.numerica.jai
+    - match: '(?<=[^.0-9_a-zA-Z])\.[0-9_]+'
+      scope: constant.numericb.jai
+    - match: '(?<=[^0-9_a-zA-Z])[0-9][0-9_]*(?:\.[0-9_]+)?'
+      scope: constant.numericc.jai
   
   constant_expression:
     - include: string_literal
     - include: preprocessor_statement
     - include: boolean_constant
-    - include: numeric_constant
     - include: non_assignment_operator
+    - include: numeric_constant
     - match: '{'
       scope: punctuation.section.block.begin.jai
       push: block
@@ -72,16 +72,21 @@ contexts:
     - match: '\b(?:for|while)\b'
       scope: keyword.control.flow.jai
       push:
-        - match: '(\*)({{name}})\s*(?=:|,)'
+        - include: constant_expression
+        - include: array_subscript
+        - match: '(\*)?({{name}})\s*(:)'
           captures:
             1: keyword.operator.jai
             2: variable.other.jai
-        - match: ','
-          scope: punctuation.separator.jai
-        - match: ':'
-          scope: keyword.operator.assignment.jai
+            3: keyword.operator.assignment.jai
+        - match: '(\*)?({{name}})\s*(,)'
+          captures:
+            1: keyword.operator.jai
+            2: variable.other.jai
+            3: punctuation.separator.jai
+        - match: '(?<!\bfor\b)(?<=\w|\])\s+(?=\w|{)'
           pop: true
-        - match: '(?<!\bfor\b)(?<=\d|\w|\])\s+(?=\w|{)'
+        - match: '$'
           pop: true
   
   preprocessor_statement:
@@ -165,6 +170,12 @@ contexts:
   full_type:
     - match: '\*'
       scope: keyword.operator.jai
+    - include: array_subscript
+    - match: '{{name}}'
+      scope: storage.type.jai
+    - include: preprocessor_statement
+  
+  array_subscript:
     - match: '\['
       scope: punctuation.section.brackets.begin.jai
       push:
@@ -172,10 +183,6 @@ contexts:
           scope: punctuation.section.brackets.end.jai
           pop: true
         - include: main
-    - match: '{{name}}'
-      scope: storage.type.jai
-    - include: preprocessor_statement
-    
       
   block:
     - meta_scope: meta.block.jai
