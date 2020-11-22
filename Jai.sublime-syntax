@@ -17,7 +17,7 @@ scope: source.jai
 
 variables:
   name: '(?:\b|\$+)[a-zA-Z_]\w*'
-  herestring_delimiter: '[\w\W]+'
+  herestring_delimiter: '[\w\W]+?(?=\s)'
   commented_line: '//.*|/\*.*'
   operator_symbol: '[+]'
 
@@ -195,17 +195,17 @@ contexts:
       scope: comment.line.jai
     
   herestring:
-    - match: '(?<=#string)\s+({{herestring_delimiter}})(?=\s)'
+    - match: '(?<=#string)\s+({{herestring_delimiter}})'
       captures:
-        1: constant.other.stringdelimiter.jai
-      scope: meta.preprocessor.jai
+        1: keyword.string-delimiter.jai
+      # scope: meta.preprocessor.jai
       embed: herestring_content
       escape: '(\1)'
       escape_captures:
-        1: constant.other.stringdelimiter.jai
+        1: keyword.string-delimiter.jai
   
   herestring_content:
-    - meta_scope: string.unquoted.jai
+    - meta_content_scope: string.quoted.other.jai
   
   string_literal:
     - match: '"'
