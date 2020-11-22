@@ -5,6 +5,12 @@
 //        ^^^^^^^ string.quoted.double.jai
 //               ^ punctuation.terminator.jai
 
+THE_STRING :: #string DONE
+This is a herestring.
+DONE
+
+
+
   my_var := 42;
 //^^^^^^ variable.other.jai
 //       ^^ keyword.operator.assignment.jai
@@ -71,6 +77,9 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 //                           ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
+pointer_array : *[] int;
+// This is not currently being tagged as meta.variable.jai, which breaks goto.
+
   my_func_0 :: () {
 //^^^^^^^^^ entity.name.function.jai
 //          ^^ keyword.operator.assignment.jai
@@ -113,6 +122,16 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
   }
 //^ meta.block.jai
 
+temp :: (
+  ) {}
+temp :: ( // 235253 
+  ) {}
+
+omg := 34;
+
+temp :: ( /* */
+  ) {}
+
   my_func_3 :: (my_param_0: My_Type, my_param_1: [] float) -> string {
 //^^^^^^^^^ entity.name.function.jai
 //          ^^ keyword.operator.assignment.jai
@@ -133,6 +152,18 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 //^^^^^^^^^^^^^ meta.function.jai
   }
 //^ meta.block.jai
+
+to_c_string :: (s: string) -> *u8 {
+    result := cast(*u8) alloc(s.count + 1);
+    memcpy(result, s.data, s.count);
+    result[s.count] = 0;
+
+    return result;
+}
+
+my_func :: (using s: MyStruct) {
+  print(a);
+}
 
 multi_line_func_0 :: (
 	my_param_0: My_Type,
@@ -161,7 +192,28 @@ for element: array
 
   My_Struct :: struct {
 //^^^^^^^^^ entity.name.struct.jai
-todo: struct stuff.
+// todo: struct stuff.
+  member: float;
+}
+
+operator + :: (a: My_Struct, b: My_Struct) -> My_Struct {
+  out : My_Struct = ---;
+  out.member = a.member + b.member;
+  return out;
+}
+
+fun :: (x: int) -> first: string = "Hello", second: string = "Sailor!" {
+    if x == 0 return;
+    if x == 1 return "Simple";
+    if x == 2 return "Simple", "Simon";
+    if x == 3 return second = "Simple", first = "Simon";
+
+    return second = "Dolly";
+}
+
+varfunc := ()
+{
+  
 }
 
 main :: () {
@@ -184,6 +236,18 @@ main :: () {
 //^^^^^^^^^^^^^ meta.function-call.jai
 //              ^^^ storage.type.jai
 //                   ^ variable.other.jai
+
+
+  int_var := 4;
+  if int_var == {
+    case 3;
+      print("3.\n");
+    case 4;
+      print("4.\n");
+    case;
+      print("Not 3 or 4.\n");
+  }
+
 } // end of main()
 
   for index: 0..7 {

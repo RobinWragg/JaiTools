@@ -4,14 +4,10 @@
 # Official syntax tutorial: http://www.sublimetext.com/docs/3/syntax.html
 # Official scope names: https://www.sublimetext.com/docs/3/scope_naming.html
 
-# TODO: Parameterized types
-# TODO: namespacing and other visibility-based features
-# TODO: better for-loop syntax
-# TODO: syntax for build output
-
-# Builtin storage types for reference (not used directly by this file):
-# Any void string bool float float32 float64 int u8 u16 u32 u64 s8 s16 s32 s64
-# Unlike the C++ syntax, we recognise type names based on their context in code, which means we can appropriately highlight user-defined types (structs)
+# TODO:
+# 'inline' keyword (e.g. Simple_String.jai)
+# Put the '$' of '$T' in keyword scope?
+# Proc return-type scoping
 
 name: Jai
 file_extensions:
@@ -20,46 +16,179 @@ file_extensions:
 scope: source.jai
 
 variables:
-  type_name: '(?:\b|\$)\w+?\b'
-  var_or_func_name: '\b[a-zA-Z_]\w*?\b'
+  name: '(?:\b|\$)[a-zA-Z_]\w*'
   herestring_delimiter: '[\w\W]+'
+  commented_line: '//.*|/\*.*'
+  operator_symbol: '[+]'
 
 contexts:
   main:
-    - include: common
-    - match: '{'
-      push: block
-  
-  block:
-    - include: common
-    - meta_scope: meta.block.jai
-    - match: '{'
-      push: block
-    - match: '}'
-      pop: true
-
-  common:
-    - include: escapes
-    - include: keyword
-    - match: ','
-      scope: punctuation.separator.jai
-    - include: check_for_function_definition
-    - match: '\b\w+(?=\s*:\s*[:=]\s*struct)'
-      scope: entity.name.struct.jai
-      push: struct_definition
-    - match: '\b\w+(?=\s*:\s*[:=]\s*enum)'
-      scope: entity.name.enum.jai
-      push: enum_definition
-    - include: check_for_variable_definition
-    - include: expression
+    - include: comment
+    - include: herestring # NOTE: Must have priority over general preprocessor rule.
+    - include: proc_signature
+    - include: preprocessor
+    - include: string_literal
+    - include: builtin_type
     - match: ';'
       scope: punctuation.terminator.jai
+    - match: '{'
+      scope: punctuation.section.block.begin.jai
+      push: block
+    - include: variable_declaration
+    - include: for_or_while_loop
+    - include: keyword
+    - include: non_assignment_operator
+    - include: assignment_operator
+    - include: numeric_constant
+    - match: '(?<=\w)\.(?=\w)' # NOTE: Must have priority over numerical constants.
+      scope: punctuation.accessor.jai
+    - match: '{{name}}(?=\()'
+      scope: meta.function-call.jai variable.function.jai
   
-  escapes:
-    - include: comment
-
-    # Herestring literals.
-    # NOTE: Must have priority over general preprocessor rule
+  numeric_constant:
+    - match: '\b0[xbhXBH][0-9a-fA-F_]*' # constant
+      scope: constant.numeric.jai
+    - match: '(?<=[^.0-9_a-zA-Z])\.[0-9_]+' # constant
+      scope: constant.numeric.jai
+    - match: '(?<=[^.0-9_a-zA-Z])[0-9][0-9_]*\.?[.0-9_]*' # constant
+      scope: constant.numeric.jai
+  
+  constant_expression:
+    - include: string_literal
+    - include: numeric_constant
+    - include: non_assignment_operator
+    - match: '{'
+      scope: punctuation.section.block.begin.jai
+      push: block
+  
+  for_or_while_loop:
+    - match: '\b(?:for|while)\b'
+      scope: keyword.control.flow.jai
+      push:
+        - match: '(\*)({{name}})\s*(?=:|,)'
+          captures:
+            1: keyword.operator.jai
+            2: variable.other.jai
+        - match: ','
+          scope: punctuation.separator.jai
+        - match: ':'
+          scope: keyword.operator.assignment.jai
+          pop: true
+        - match: '(?<!\bfor\b)(?<=\d|\w|\])\s+(?=\w|{)'
+          pop: true
+  
+  preprocessor:
+    - match: '#import|#load'
+      scope: keyword.control.import.jai
+    - match: '#\w*\b'
+      scope: meta.preprocessor.jai
+  
+  keyword:
+    - match: '\breturn\b'
+      scope: keyword.control.flow.return.jai
+    - match: '\bif\b'
+      scope: keyword.control.flow.conditional.jai
+    - match: '\b(?:using|xx|push_context|defer)\b'
+      scope: keyword.other.jai
+    - match: '---'
+      scope: keyword.other.jai
+    - match: '\b(?:it|it_index)\b'
+      scope: keyword.other.jai
+    - match: '\b(?:true|false|null)\b'
+      scope: constant.language.jai
+            
+  assignment_operator:
+    - match: ':|='
+      scope: keyword.operator.assignment.jai
+  
+  non_assignment_operator:
+    - match: '>>|<<|[~&|]'
+      scope: keyword.operator.bitwise.jai
+    - match: '[><!]|=='
+      scope: keyword.operator.logical.jai
+    - match: '[+*/-]'
+      scope: keyword.operator.arithmetic.jai
+    - match: '\.\.'
+      scope: keyword.operator.jai
+  
+  variable_declaration:
+    - match: '{{name}}\s*(?=:)'
+      scope: variable.other.jai
+      push:
+        - meta_scope: meta.variable.jai
+        - match: ':'
+          scope: keyword.operator.assignment.jai
+          push:
+            - include: full_type
+            - match: ':|='
+              scope: keyword.operator.assignment.jai
+              pop: true
+            - match: '(?=;)'
+              pop: true
+        - match: '(?=\s*#string)'
+          pop: true
+        - match: '\bstruct\b'
+          scope: storage.type.jai
+          push: struct_configuration
+        - match: '\benum\b'
+          scope: storage.type.jai
+          push: enum_configuration
+        - match: '(?=\s*{)'
+          pop: true
+        - match: ';'
+          scope: punctuation.terminator.jai
+          pop: true
+        - include: main
+  
+  struct_configuration:
+    - match: '(?=\()'
+      push: parameter_list
+    - match: '(?=\s*{)'
+      pop: true
+  
+  enum_configuration:
+    - match: '(?=\s*{)'
+      pop: true
+    - include: builtin_type
+    - include: preprocessor
+  
+  builtin_type:
+    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64|struct|enum)\b'
+      scope: storage.type.jai
+  
+  full_type:
+    - match: '\*'
+      scope: keyword.operator.jai
+    - match: '\['
+      scope: punctuation.section.brackets.begin.jai
+      push:
+        - match: '\]'
+          scope: punctuation.section.brackets.end.jai
+          pop: true
+        - include: main
+    - match: '{{name}}'
+      scope: storage.type.jai
+    - include: preprocessor
+    
+      
+  block:
+    - meta_scope: meta.block.jai
+    - include: main
+    - match: '}'
+      scope: punctuation.section.block.end.jai
+      pop: true
+  
+  comment:
+    - match: /\*
+      push:
+        - include: multiline_comment
+        - meta_scope: comment.block.jai
+        - match: \*/
+          pop: true
+    - match: '//.*$'
+      scope: comment.line.jai
+    
+  herestring:
     - match: '#string\s+({{herestring_delimiter}})(?=\s)'
       captures:
         1: constant.other.stringdelimiter.jai
@@ -68,229 +197,85 @@ contexts:
       escape: ^(\1)$
       escape_captures:
         1: constant.other.stringdelimiter.jai
-    
-    # Preprocessor-style directives (#run, #must, etc)
-    - match: '#import\s*'
-      scope: keyword.control.import.jai
-    - match: '#(?:\w+\b)?'
-      scope: meta.preprocessor.jai
-    
-    # Tags
-    - match: '(@)(?:\w+\b)?'
-      captures:
-        1: punctuation.definition.annotation.jai
-      scope: meta.annotation.jai
   
   herestring_content:
     - meta_scope: string.unquoted.jai
-
+  
   string_literal:
-    - meta_scope: string.quoted.double.jai
-    - match: '\\.'
-      scope: constant.character.escape.jai
-    - match: '%'
-      scope: constant.other.placeholder.jai
     - match: '"'
-      pop: true
-    
-  multiline_comment:
-    - match: /\*
       push:
-        - include: multiline_comment
-        - meta_scope: comment.block.jai
-        - match: \*/
+        - meta_scope: string.quoted.double.jai
+        - match: '\\.'
+          scope: constant.character.escape.jai
+        - match: '%'
+          scope: constant.other.placeholder.jai
+        - match: '"'
           pop: true
   
-  comment:
-    - include: multiline_comment
-    - match: //
-      push:
-        - meta_scope: comment.line.jai
-        - match: $
-          pop: true
-  
-  keyword:
-    - match: '>>|<<|[~&|]'
-      scope: keyword.operator.bitwise.jai
-    - match: '[><!]|=='
-      scope: keyword.operator.logical.jai
-    - match: '[+*/-]'
-      scope: keyword.operator.arithmetic.jai
-    - match: '='
-      scope: keyword.operator.assignment.jai
-    - match: '(?:\bstruct\b|\busing\b|\.\.)'
-      scope: keyword.other.jai
-    - match: '\b(?:cast|type_of)(?:,\w+)?(?=\()'
-      scope: keyword.operator.word.jai
-    - match: '\b(?:return|if|then|else|for|while|break|continue)\b'
-      scope: keyword.control.jai
-  
-  expression:
-    - include: escapes
-    - include: keyword
-    - match: '\b(?:it|it_index)\b'
-      scope: variable.language.jai
-    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64)\b'
-      scope: storage.type.jai
-    - match: '"'
-      push: string_literal
-    - match: '\b(?:null|true|false)\b'
-      scope: constant.language.jai
-    - match: '({{var_or_func_name}})(\[)'
-      captures:
-        1: variable.other.jai
-        2: punctuation.section.brackets.begin.jai
-      push: array_subscript
-    - match: '{{var_or_func_name}}(?=\()'
-      scope: variable.function.jai
-      push: function_call_arguments
-    - match: '{{var_or_func_name}}'
-      scope: variable.other.jai
-    - match: '\b0h[a-fA-F0-9_]*'
-      scope: constant.numeric.float.hexadecimal.jai
-    - match: '\b0x[a-fA-F0-9_]*'
-      scope: constant.numeric.integer.hexadecimal.jai
-    - match: '\b0b[01_]*'
-      scope: constant.numeric.integer.hexadecimal.jai
-    - match: '\b\d[0-9_]*\.[0-9_]+'
-      scope: constant.numeric.float.decimal.jai
-    - match: '\b\d[0-9_]*'
-      scope: constant.numeric.integer.decimal.jai
-    - match: '(?<=\w)(\.)({{var_or_func_name}})'
-      captures:
-        1: punctuation.accessor.jai
-        2: variable.other.member.jai
-  
-  function_call_arguments:
-    - meta_scope: meta.function-call.jai
-    - include: expression
-    - match: '\)'
-      pop: true
-  
-  check_for_function_definition:
-    # Function definition with line ending before )
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*\w+:)'
+  # Matches a procedure signature, starting with the proc's name and ending before the opening '{'.
+  # This includes operator procedures.
+  proc_signature:
+    # Match the '->' symbol for the return value(s), or '\)\s*{' which means no return value.
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(.*?\)\s*(?:->|{))'
       scope: entity.name.function.jai
-      push: function_definition
-    # Function definition with line ending immediately after (
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\(\s*(?:$|\/))'
-      scope: entity.name.function.jai
-      push: function_definition
-    # Full, one-line function definition
-    - match: '\b\w+(?=\s*:\s*[:=]\s*\([^)]*?\)\s*(?:{|->))'
-      scope: entity.name.function.jai
-      push: function_definition
+      push: proc_signature_post_name
     
-  function_definition:
+    # # Match a newline after the closing parenthesis.
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(.*?\)\s*(?:{{commented_line}})?\s*$)'
+      scope: entity.name.function.jai
+      push: proc_signature_post_name
+      
+    # Match the first comma in the parameter list.
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\([^\)]+,)'
+      scope: entity.name.function.jai
+      push: proc_signature_post_name
+      
+    # Match an end of line after the opening parenthesis. This is not guaranteed to be a proc, but
+    # we assume it is as it's the best we can do if the previous matches fail due to newlines in the
+    # middle of the parameters etc.
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(\s*(?:{{commented_line}})?$)'
+      scope: entity.name.function.jai
+      push: proc_signature_post_name
+  
+  # Matches part of a procedure signature, starting with :: or := and ending before the opening '{'.
+  proc_signature_post_name:
     - meta_scope: meta.function.jai
-    - include: escapes
-    - match: '::|:='
-      scope: keyword.operator.assignment.jai
+    - include: non_assignment_operator
+    - include: assignment_operator
+    - match: '(?=\()'
+      push: parameter_list
+    - match: '(?=\s*{)'
+      pop: true
+  
+  parameter_list:
+    - include: comment
     - match: '\('
       scope: punctuation.section.parameters.begin.jai
-      push: function_parameters
-    - match: '\s*->\s*'
-      scope: keyword.other.jai
-      push: function_return_specifier
-    - match: '(?=\s*[{;])'
-      pop: true
-  
-  function_parameters:
-    - meta_content_scope: meta.function.parameters.jai
-    - include: escapes
-    - match: '({{var_or_func_name}})\s*(:)\s*'
+    - match: '({{name}})\s*(:)'
       captures:
         1: variable.parameter.jai
-        2: punctuation.separator.jai
-      push: function_parameter_type
-    - match: ','
-      scope: punctuation.separator.jai
+        2: keyword.operator.assignment.jai
+      push:
+        - include: comment
+        - match: ','
+          scope: punctuation.separator.jai
+          pop: true
+        - match: '(?=\))'
+          pop: true
+        - include: full_type
+        - match: '='
+          scope: keyword.operator.assignment.jai
+          push:
+            - include: comment
+            - include: constant_expression
+            - match: '(?=,|\))'
+              pop: true
     - match: '\)'
       scope: punctuation.section.parameters.end.jai
       pop: true
-  
-  function_return_specifier:
-    - include: escapes
-    - match: '\s*({{var_or_func_name}})\s*(:)\s*({{type_name}})\s*'
-      captures:
-        1: variable.return-value.jai
-        2: keyword.operator.assignment.jai
-        3: storage.type.jai
-    - match: ','
-      scope: punctuation.separator.jai
-    - match: '\s*{{type_name}}\s*(?={|;|,|(?:/.*)?$)'
-      scope: storage.type.jai
-    - match: '(?=\s*[{;])'
-      pop: true
-  
-  function_parameter_type:
-    - include: escapes
-    - match: '\s*\['
-      scope: punctuation.section.brackets.begin.jai
-      push: array_subscript
-    - match: '\s*{{type_name}}\s*'
-      scope: storage.type.jai
-    - match: '(?=,)'
-      pop: true
-    - match: '(?=\))'
-      pop: true
 
-  struct_definition:
-    - meta_scope: meta.struct.jai
-    - include: escapes
-    - match: '::|:='
-      scope: keyword.operator.assignment.jai
-    - match: '\bstruct\b'
-      scope: keyword.other.jai
-    - match: '(?=\s*{)'
-      pop: true
-  
-  enum_definition:
-    - meta_scope: meta.enum.jai
-    - include: escapes
-    - match: '::|:='
-      scope: keyword.operator.assignment.jai
-    - match: '\benum\b'
-      scope: keyword.other.jai
-    - match: '(?=\s*{)'
-      pop: true
-  
-  array_subscript:
-    - match: '\['
-      scope: punctuation.section.brackets.begin.jai
-      push: array_subscript
-    - include: expression
-    - match: '\]'
-      scope: punctuation.section.brackets.end.jai
-      pop: true
-  
-  array_declaration:
-    - meta_scope: meta.variable.jai
-    - include: array_subscript
-    - match: '\s*{{type_name}}\s*'
-      scope: storage.type.jai
-    - include: expression_then_semicolon
-  
-  check_for_variable_definition:
-    - match: '({{var_or_func_name}})\s*(:)\s*(?=\[)'
-      captures:
-        1: variable.other.jai
-        2: keyword.operator.assignment.jai
-      push: array_declaration
-    - match: '({{var_or_func_name}})\s*(:)\s*({{type_name}})?\s*(?:(:|=)|(?=;))'
-      captures:
-        1: variable.other.jai
-        2: keyword.operator.assignment.jai
-        3: storage.type.jai
-        4: keyword.operator.assignment.jai
-      push: expression_then_semicolon
-  
-  expression_then_semicolon:
-    - meta_scope: meta.variable.jai
-    - include: expression
-    - match: ';'
-      scope: punctuation.terminator.jai
-      pop: true
+
+
 
 
 
