@@ -6,8 +6,10 @@
 
 # TODO:
 # 'inline' keyword (e.g. Simple_String.jai)
-# Put the '$' of '$T' in keyword scope?
 # Proc return-type scoping
+# Show #scope_export and #scope_file in file-local Goto Symbol view (ctrl/cmd+R) but not in Goto Symbol In Project.
+# Handle 'inline' keyword in proc headers.
+# Proc headers that don't have bodies.
 
 name: Jai
 file_extensions:
@@ -43,6 +45,9 @@ contexts:
     - include: numeric_constant
     - match: '(?<=\w)\.(?=\w)' # NOTE: Must have priority over numerical constants.
       scope: punctuation.accessor.jai
+    - include: procedure_call
+  
+  procedure_call:
     - match: '{{name}}(?=\()'
       scope: meta.function-call.jai variable.function.jai
   
@@ -74,6 +79,7 @@ contexts:
       push:
         - include: constant_expression
         - include: array_subscript
+        - include: procedure_call
         - match: '(\*)?({{name}})\s*(:)'
           captures:
             1: keyword.operator.jai
@@ -98,6 +104,12 @@ contexts:
   keyword:
     - match: '\breturn\b'
       scope: keyword.control.flow.return.jai
+    - match: '\bbreak\b'
+      scope: keyword.control.flow.break.jai
+    - match: '\bcontinue\b'
+      scope: keyword.control.flow.continue.jai
+    - match: '\bcase\b'
+      scope: keyword.control.flow.case.jai
     - match: '\b(?:if|else)\b'
       scope: keyword.control.flow.conditional.jai
     - match: '\b(?:using|xx|push_context|defer)\b'
@@ -141,7 +153,7 @@ contexts:
         - match: '\bstruct\b'
           scope: storage.type.jai
           push: struct_configuration
-        - match: '\benum\b'
+        - match: '\b(?:enum|enum_flags)\b'
           scope: storage.type.jai
           push: enum_configuration
         - match: '(?=\s*{)'
@@ -156,6 +168,7 @@ contexts:
       push: parameter_list
     - match: '(?=\s*{)'
       pop: true
+    - include: preprocessor_statement
   
   enum_configuration:
     - match: '(?=\s*{)'
@@ -229,7 +242,7 @@ contexts:
   # This includes operator procedures.
   proc_signature:
     # Match the '->' symbol for the return value(s), or '\)\s*{' which means no return value.
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(.*?\)\s*(?:->|{))'
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(.*?\)\s*(?:->|{|#))'
       scope: entity.name.function.jai
       push: proc_signature_post_name
     
@@ -253,6 +266,8 @@ contexts:
   # Matches part of a procedure signature, starting with :: or := and ending before the opening '{'.
   proc_signature_post_name:
     - meta_scope: meta.function.jai
+    - match: '->'
+      scope: keyword.other.jai # TODO: enter return-list scope
     - include: non_assignment_operator
     - include: assignment_operator
     - match: '(?=\()'
