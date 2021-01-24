@@ -10,6 +10,7 @@
 # Show #scope_export and #scope_file in file-local Goto Symbol view (ctrl/cmd+R) but not in Goto Symbol In Project.
 # Handle 'inline' keyword in proc headers.
 # Proc headers that don't have bodies.
+# Unions
 
 name: Jai
 file_extensions:
