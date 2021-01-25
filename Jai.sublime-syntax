@@ -210,7 +210,6 @@ contexts:
   comment:
     - match: '/\*'
       push:
-        - include: multiline_comment
         - meta_scope: comment.block.jai
         - match: '\*/'
           pop: true
