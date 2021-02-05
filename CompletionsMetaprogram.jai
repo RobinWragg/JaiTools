@@ -99,8 +99,7 @@ print_proc_header :: (builder: *String_Builder, proc_header: *Code_Procedure_Hea
   //
   // Additional info that will show on the right of the list entry (filename, basically)
   //
-  // TODO: use filename, not file path, unless it's part of a module, in which case print only the module name.
-  print_to_builder(builder, "\\t %', '", sublime_file_path);
+  print_to_builder(builder, "\\t %', '", ui_name);
   
   //
   // Print the text that will be insert including completions the user can Tab through
@@ -118,14 +117,16 @@ print_proc_header :: (builder: *String_Builder, proc_header: *Code_Procedure_Hea
   print_to_builder(builder, ")'],\n");
 }
 
+ui_name: string;
 sublime_file_path: string;
 
 main :: () {
   cmd_line_args := compiler_get_command_line_arguments();
   
-  assert(cmd_line_args.count > 0, "No arguments given");
+  assert(cmd_line_args.count == 2, "Arg 1 must be the UI name of the file. Arg 2 must be the file path.");
   
-  sublime_file_path = cmd_line_args[0];
+  ui_name = cmd_line_args[0];
+  sublime_file_path = cmd_line_args[1];
   
   set_all_build_options();
   
