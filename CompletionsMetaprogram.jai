@@ -123,6 +123,9 @@ sublime_file_path: string;
 main :: () {
   cmd_line_args := compiler_get_command_line_arguments();
   
+  print("argcount: %\n", cmd_line_args.count);
+  print("arg1: %\n", cmd_line_args[0]);
+  print("arg2: %\n", cmd_line_args[1]);
   assert(cmd_line_args.count == 2, "Arg 1 must be the UI name of the file. Arg 2 must be the file path.");
   
   ui_name = cmd_line_args[0];
@@ -153,6 +156,8 @@ main :: () {
           if !declaration.root_expression continue;
           
           if declaration.name.count == 0 continue;
+          
+          print("kind: %\n", declaration.root_expression.kind);
           
           if declaration.root_expression.kind == {
             case .PROCEDURE_HEADER;

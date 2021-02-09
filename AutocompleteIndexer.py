@@ -10,6 +10,7 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
   gather_from_unopen_files = False
   completion_index = {}
   parser = None
+  reindex_in_progress = False
   
   full_reindex_interval_secs = 60 * 10 # Ten minutes
   last_full_reindex_secs = -full_reindex_interval_secs # Ensure re-indexing happens on launch
@@ -82,7 +83,13 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       self.completion_index[index_key] = self.get_parser().get_completions_from_text(jai_text, file_name_for_user)
   
   def reindex_everything(self):
+    if self.reindex_in_progress:
+      return
+    else:
+      self.reindex_in_progress = True
+    
     print('JaiTools: Starting re-indexing of completions')
+    self.last_full_reindex_secs = time.time()
     
     start_time = time.time()
     
@@ -106,10 +113,10 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
           break
     
     self.completion_index = new_completion_index
-    self.last_full_reindex_secs = time.time()
     
     duration_ms = int((time.time() - start_time) * 1000)
     print('JaiTools: Full re-indexing of completions took ' + str(duration_ms) + 'ms')
+    self.reindex_in_progress = False
     
   def on_pre_close(self, view):
     self.index_view(view, True)
