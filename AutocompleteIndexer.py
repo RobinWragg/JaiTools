@@ -4,6 +4,7 @@ from .MetaprogramParser import *
 import sublime_plugin
 import time
 
+# TODO: parser can return a list of completions or None. If None, don't modify the completion index. This will mean ST will use completions from the last time the file was able to be parsed. If the index doesn't already contain completions for the file, assign an empty array.
 # TODO: use filename, not file path, for the UI filenames, unless it's part of a module, in which case print only the module name.
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
@@ -50,6 +51,9 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       return file_path
   
   def index_view(self, view, is_async):
+    if not view_is_jai(view):
+      return
+      
     # If a full re-index hasn't been performed recently (see the value of
     # full_reindex_interval_secs), and this function will not block the user (an async event),
     # re-index everything in order to:
@@ -58,9 +62,6 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     #  - Index any file changes that were made outside of Sublime Text
     if is_async and time.time() - self.last_full_reindex_secs > self.full_reindex_interval_secs:
       self.reindex_everything()
-      return
-    
-    if not view_is_jai(view):
       return
     
     index_key = self.get_view_index_key(view)

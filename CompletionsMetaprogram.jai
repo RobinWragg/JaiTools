@@ -72,7 +72,7 @@ print_proc_header :: (builder: *String_Builder, proc_header: *Code_Procedure_Hea
   //
   // Print the entry that will show in the list
   //
-  print_to_builder(builder, "['%(", proc_header.name);
+  print_to_builder(builder, ">%(", proc_header.name);
   
   for proc_header.arguments {
     if it_index < proc_header.arguments.count-1 {
@@ -99,7 +99,7 @@ print_proc_header :: (builder: *String_Builder, proc_header: *Code_Procedure_Hea
   //
   // Additional info that will show on the right of the list entry (filename, basically)
   //
-  print_to_builder(builder, "\\t %', '", ui_name);
+  print_to_builder(builder, "\t %$$$", ui_name);
   
   //
   // Print the text that will be insert including completions the user can Tab through
@@ -114,7 +114,7 @@ print_proc_header :: (builder: *String_Builder, proc_header: *Code_Procedure_Hea
     }
   }
   
-  print_to_builder(builder, ")'],\n");
+  print_to_builder(builder, ")\n");
 }
 
 ui_name: string;
@@ -123,10 +123,7 @@ sublime_file_path: string;
 main :: () {
   cmd_line_args := compiler_get_command_line_arguments();
   
-  print("argcount: %\n", cmd_line_args.count);
-  print("arg1: %\n", cmd_line_args[0]);
-  print("arg2: %\n", cmd_line_args[1]);
-  assert(cmd_line_args.count == 2, "Arg 1 must be the UI name of the file. Arg 2 must be the file path.");
+  assert(cmd_line_args.count == 2, "Error: Arg 1 must be the UI name of the file. Arg 2 must be the file path.");
   
   ui_name = cmd_line_args[0];
   sublime_file_path = cmd_line_args[1];
@@ -135,7 +132,6 @@ main :: () {
   
   // Start the python list declaration
   python_builder: String_Builder;
-  print_to_builder(*python_builder, "completions_from_metaprogram = [\n");
   
   load_src_lines(sublime_file_path);
   
@@ -157,8 +153,6 @@ main :: () {
           
           if declaration.name.count == 0 continue;
           
-          print("kind: %\n", declaration.root_expression.kind);
-          
           if declaration.root_expression.kind == {
             case .PROCEDURE_HEADER;
               print_proc_header(*python_builder, cast(*Code_Procedure_Header) declaration.root_expression);
@@ -170,8 +164,6 @@ main :: () {
   }
   
   compiler_end_intercept(second_workspace);
-  
-  print_to_builder(*python_builder, "]\n");
   
   python_list := builder_to_string(*python_builder);
   print(python_list);
