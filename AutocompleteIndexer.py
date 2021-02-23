@@ -6,10 +6,12 @@ import time
 
 # TODO: parser can return a list of completions or None. If None, don't modify the completion index. This will mean ST will use completions from the last time the file was able to be parsed. If the index doesn't already contain completions for the file, assign an empty array.
 # TODO: use filename, not file path, for the UI filenames, unless it's part of a module, in which case print only the module name.
+# rwtodo: ensure a buffer and a file path of the same code can't exist in the cache. That would result in duplicated completions. Maybe just watch for the file save event and delete the buffer then.
+# rwtodo: it appears that files that are open but not located in one of the project folders are not parsed.
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
-  gather_from_unopen_files = False
-  completion_index = {}
+  gather_from_unopen_files = True # rwtodo: add this as a preference
+  completion_index = {} # rwtodo: rename to completion_cache, and rename index_key to cache_key etc
   parser = None
   reindex_in_progress = False
   
@@ -17,10 +19,9 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
   last_full_reindex_secs = -full_reindex_interval_secs # Ensure re-indexing happens on launch
   
   def get_parser(self):
-    # TODO: here we can check which parser to use.
-    settings = sublime.load_settings('JaiTools.sublime-settings')
-    
     if self.parser == None:
+      settings = sublime.load_settings('JaiTools.sublime-settings')
+      
       if settings.get('use_compiler_for_completions') == True:
         self.parser = MetaprogramParser()
       else:
@@ -50,6 +51,24 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     else:
       return file_path
   
+  def get_completions_from_index_key(self, index_key):
+    completions = None
+    
+    if isinstance(index_key, str):
+      # index_key is a file path.
+      ui_name = os.path.basename(index_key) # rwtodo: this should be the module name if the file is part of a standard module. Not sure about user modules.
+      completions = self.get_parser().get_completions_from_file(index_key, ui_name)
+    else:
+      # index_key is a buffer ID (int). This means the Jai code only exists in an unsaved view.
+      # The API can't get text from the buffer directly, so find a view associated with it (if any).
+      for view in sublime.active_window().views():
+        if view.buffer_id() == index_key:
+          jai_text = get_view_contents(view)
+          completions = self.get_parser().get_completions_from_text(jai_text, 'unsaved')
+          break
+    
+    return completions
+  
   def index_view(self, view, is_async):
     if not view_is_jai(view):
       return
@@ -65,23 +84,11 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       return
     
     index_key = self.get_view_index_key(view)
-    file_name_for_user = ''
     
-    if isinstance(index_key, str):
-      # index_key is the file path
-      file_name_for_user = os.path.basename(index_key)
-      
-      # Ensure there is no reference to the buffer, as it would contain duplicate completions.
-      buffer_id = view.buffer_id()
-      if buffer_id in self.completion_index:
-        del self.completion_index[buffer_id]
-      
-      self.completion_index[index_key] = self.get_parser().get_completions_from_file(index_key, file_name_for_user)
-    else:
-      # index_key is the buffer ID, meaning there is no corresponding file on disk.
-      file_name_for_user = 'unsaved'
-      jai_text = get_view_contents(view)
-      self.completion_index[index_key] = self.get_parser().get_completions_from_text(jai_text, file_name_for_user)
+    completions = self.get_completions_from_index_key(index_key)
+    
+    if completions != None:
+      self.completion_index[index_key] = completions
   
   def reindex_everything(self):
     if self.reindex_in_progress:
@@ -97,21 +104,11 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     new_completion_index = {}
     all_index_keys = self.get_all_index_keys()
     
-    # Split keys into file paths and buffer IDs to gather completions differently
-    file_paths = filter(lambda x: isinstance(x, str), all_index_keys)
-    buffer_ids = filter(lambda x: isinstance(x, int), all_index_keys)
-    
-    for path in file_paths:
-      name_for_user = os.path.basename(path)
-      new_completion_index[path] = self.get_parser().get_completions_from_file(path, name_for_user)
-    
-    for buffer_id in buffer_ids:
-      # The API can't get text from the buffer directly, so find a view associated with it (if any).
-      for view in sublime.active_window().views():
-        if view.buffer_id() == buffer_id:
-          jai_text = get_view_contents(view)
-          new_completion_index[buffer_id] = self.get_parser().get_completions_from_text(jai_text, 'unsaved')
-          break
+    for index_key in all_index_keys:
+      completions = self.get_completions_from_index_key(index_key)
+      
+      if completions != None:
+        new_completion_index[index_key] = completions
     
     self.completion_index = new_completion_index
     

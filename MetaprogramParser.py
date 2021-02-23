@@ -4,6 +4,10 @@ import os
 import time
 
 class MetaprogramParser:
+  # This should return:
+  #  an array when there were no parsing errors
+  #  None when there were parsing errors
+  #  an empty array when there were no errors and no completions
   def get_completions_from_file(self, path, name_for_user):
     metaprogram_name = 'CompletionsMetaprogram.jai'
     
@@ -21,16 +25,18 @@ class MetaprogramParser:
     # if windows (rwtodo):
     startupinfo = subprocess.STARTUPINFO()
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
+    
+    # NOTE: when there are build warnings, no declarations are received from the compiler unless we set the current working directory to where the file lives. This might be a compiler bug. See 'cwd=...' below.
     proc = subprocess.Popen(
-      args=['jai', metaprogram_name, '--', 'this is a UI-friendly name', 'test.jai'],
+      args=['jai', metaprogram_name, '--', name_for_user, os.path.basename(path)],
       startupinfo=startupinfo,
       stdin=subprocess.PIPE,   # python 3.3 bug on Win7
       stderr=subprocess.PIPE,
       stdout=subprocess.PIPE,
       universal_newlines=True,
-      cwd=dirname
+      cwd=os.path.dirname(path)
     )
+    
     result, errors_and_warnings = proc.communicate()
     
     if type(errors_and_warnings) is str:
@@ -52,7 +58,7 @@ class MetaprogramParser:
   
   def get_completions_from_text(self, jai_text, file_name_for_user):
     print("NOT IMPLEMENTED YET")
-    crash
+    # rwtodo
   
   def _get_file_contents(self, file_path):
     file_view = sublime.active_window().find_open_file(file_path)
