@@ -4,13 +4,12 @@ from .MetaprogramParser import *
 import sublime_plugin
 import time
 
-# TODO: parser can return a list of completions or None. If None, don't modify the completion index. This will mean ST will use completions from the last time the file was able to be parsed. If the index doesn't already contain completions for the file, assign an empty array.
 # TODO: use filename, not file path, for the UI filenames, unless it's part of a module, in which case print only the module name.
 # rwtodo: ensure a buffer and a file path of the same code can't exist in the cache. That would result in duplicated completions. Maybe just watch for the file save event and delete the buffer then.
-# rwtodo: it appears that files that are open but not located in one of the project folders are not parsed.
+# rwtodo: it appears that files that are open but not located in one of the project folders are not parsed. When this is fixed, ensure that files which are not included in the project folders are removed from the cache when they are closed.
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
-  gather_from_unopen_files = True # rwtodo: add this as a preference
+  gather_from_unopen_files = False # rwtodo: add this as a preference
   completion_index = {} # rwtodo: rename to completion_cache, and rename index_key to cache_key etc
   parser = None
   reindex_in_progress = False

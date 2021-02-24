@@ -14,7 +14,7 @@ DONE
   my_var := 42;
 //^^^^^^ variable.other.jai
 //       ^^ keyword.operator.assignment.jai
-//          ^^ constant.numeric.integer.decimal.jai
+//          ^^ constant.numeric.jai
 //            ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^ meta.variable.jai
 
@@ -29,7 +29,7 @@ DONE
 //^^^^^^^^^^ variable.other.jai
 //           ^^ keyword.operator.assignment.jai
 //              ^^^^^^^ variable.function.jai
-//              ^^^^^^^^^ meta.function-call.jai
+//              ^^^^^^^ meta.function-call.jai
 //                       ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
@@ -37,7 +37,7 @@ DONE
 //^^^^^^^^^^^^^^^ variable.other.jai
 //                ^^ keyword.operator.assignment.jai
 //                   ^^^^ comment.block.jai
-//                        ^^ constant.numeric.integer.decimal.jai
+//                        ^^ constant.numeric.jai
 //                           ^^^^ comment.block.jai
 //                                ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
@@ -47,13 +47,13 @@ DONE
 //                ^ keyword.operator.assignment.jai
 //                  ^^^ storage.type.jai
 //                      ^ keyword.operator.assignment.jai
-//                        ^^ constant.numeric.integer.decimal.jai
+//                        ^^ constant.numeric.jai
 //                          ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
   my_negative_float := -2_3_5.0_1_3_5_3_1;
 //                     ^ keyword.operator.arithmetic.jai
-//                      ^^^^^^^^^^^^^^^^^ constant.numeric.float.decimal.jai
+//                      ^^^^^^^^^^^^^^^^^ constant.numeric.jai
 
 my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 
@@ -61,7 +61,7 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 //^^^^^^^^ variable.other.jai
 //         ^ keyword.operator.assignment.jai
 //           ^ punctuation.section.brackets.begin.jai
-//            ^ constant.numeric.integer.decimal.jai
+//            ^ constant.numeric.jai
 //             ^ punctuation.section.brackets.end.jai
 //               ^^^ storage.type.jai
 //                  ^ punctuation.terminator.jai
@@ -71,7 +71,6 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 //^^^^^^^^ variable.other.jai
 //         ^ keyword.operator.assignment.jai
 //           ^ punctuation.section.brackets.begin.jai
-//            ^^^^^^ variable.other.jai
 //                  ^ punctuation.section.brackets.end.jai
 //                    ^^^^^^^ storage.type.jai
 //                           ^ punctuation.terminator.jai
@@ -95,7 +94,7 @@ pointer_array : *[] int;
 //          ^^ keyword.operator.assignment.jai
 //             ^ punctuation.section.parameters.begin.jai
 //              ^^^^^^^^ variable.parameter.jai
-//                      ^ punctuation.separator.jai
+//                      ^ keyword.operator.assignment.jai
 //                        ^^^ storage.type.jai
 //                           ^ punctuation.section.parameters.end.jai
 //                             ^ meta.block.jai
@@ -108,11 +107,11 @@ pointer_array : *[] int;
 //          ^^ keyword.operator.assignment.jai
 //             ^ punctuation.section.parameters.begin.jai
 //              ^^^^^^^^^^ variable.parameter.jai
-//                        ^ punctuation.separator.jai
+//                        ^ keyword.operator.assignment.jai
 //                          ^^^^^^^ storage.type.jai
 //                                 ^ punctuation.separator.jai
 //                                   ^^^^^^^^^^ variable.parameter.jai
-//                                             ^ punctuation.separator.jai
+//                                             ^ keyword.operator.assignment.jai
 //                                               ^ punctuation.section.brackets.begin.jai
 //                                                ^ punctuation.section.brackets.end.jai
 //                                                  ^^^^^ storage.type.jai
@@ -137,11 +136,11 @@ temp :: ( /* */
 //          ^^ keyword.operator.assignment.jai
 //             ^ punctuation.section.parameters.begin.jai
 //              ^^^^^^^^^^ variable.parameter.jai
-//                        ^ punctuation.separator.jai
+//                        ^ keyword.operator.assignment.jai
 //                          ^^^^^^^ storage.type.jai
 //                                 ^ punctuation.separator.jai
 //                                   ^^^^^^^^^^ variable.parameter.jai
-//                                             ^ punctuation.separator.jai
+//                                             ^ keyword.operator.assignment.jai
 //                                               ^ punctuation.section.brackets.begin.jai
 //                                                ^ punctuation.section.brackets.end.jai
 //                                                  ^^^^^ storage.type.jai
@@ -230,7 +229,7 @@ main :: () {
   cast(My_Struct) 4;
 //^^^^ meta.function-call.jai
 //     ^^^^^^^^^ storage.type.jai
-//                ^ constant.numeric.integer.decimal.jai
+//                ^ constant.numeric.jai
 
   cast,no_check(int) my_negative_float;
 //^^^^^^^^^^^^^ meta.function-call.jai
@@ -254,9 +253,9 @@ main :: () {
 //^^^ keyword.control.jai
 //    ^^^^^ variable.other.jai
 //         ^ punctuation.separator.jai
-//           ^ constant.numeric.integer.decimal.jai
+//           ^ constant.numeric.jai
 //            ^^ keyword.other.jai
-//              ^ constant.numeric.integer.decimal.jai
+//              ^ constant.numeric.jai
 }
 
 

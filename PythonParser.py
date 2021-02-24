@@ -1,9 +1,11 @@
 import sublime
 import re
 
+# rwtodo: remove contents of herestrings, similarly to comments.
+
 class PythonParser:
-  definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?[{;]')
-  proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?{')
+  definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?(?:;|{|#string)')
+  proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?[{;]')
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
   line_comment_pattern = re.compile(r'//.*?(?=\n)')
   
@@ -20,12 +22,15 @@ class PythonParser:
     completions = []
     
     for definition in definitions:
+      # Replace all whitespace with single spaces. This resolves some formatting issues.
+      definition = re.sub(r'\s+', ' ', definition)
+      
       if self.proc_pattern.search(definition) == None:
         completion = self._make_completion_from_variable_definition(definition, file_name_for_user)
         completions.append(completion)
       else:
         completions += self._make_completions_from_proc_definition(definition, file_name_for_user)
-        
+    
     return completions
   
   def _strip_block_comments(self, jai_text):

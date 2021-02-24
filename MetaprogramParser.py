@@ -3,44 +3,65 @@ import subprocess
 import os
 import time
 
+# This is an experimental parser that executes a Jai metaprogram and collects declarations.
+# The current theoretical hurdle to get it working well is that no declarations are collected if build errors occur.
+# This is likely, because the metaprogram only knows about one file at any given time.
+
 class MetaprogramParser:
-  # This should return:
-  #  an array when there were no parsing errors
-  #  None when there were parsing errors
-  #  an empty array when there were no errors and no completions
-  def get_completions_from_file(self, path, name_for_user):
-    metaprogram_name = 'CompletionsMetaprogram.jai'
-    
-    # debug sleep todo
-    time.sleep(0.5)
-    
-    if path.endswith(metaprogram_name):
-      return None
-    # rwtodo: make this exception-safe. Return None on exception.
-    
-    dirname = os.path.dirname(os.path.abspath(__file__))
-    
+  def execute(self, args, cwd=None):
     startupinfo = None
 
     # if windows (rwtodo):
     startupinfo = subprocess.STARTUPINFO()
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     
-    # NOTE: when there are build warnings, no declarations are received from the compiler unless we set the current working directory to where the file lives. This might be a compiler bug. See 'cwd=...' below.
     proc = subprocess.Popen(
-      args=['jai', metaprogram_name, '--', name_for_user, os.path.basename(path)],
+      args=args,
       startupinfo=startupinfo,
       stdin=subprocess.PIPE,   # python 3.3 bug on Win7
       stderr=subprocess.PIPE,
       stdout=subprocess.PIPE,
       universal_newlines=True,
-      cwd=os.path.dirname(path)
+      cwd=cwd
     )
     
     result, errors_and_warnings = proc.communicate()
+    result = result.strip()
     
     if type(errors_and_warnings) is str:
-      result += errors_and_warnings
+      result += '\n' + errors_and_warnings.strip()
+    
+    return result
+    
+  def check_for_compiler_name(self, compiler_name):
+    print(compiler_name)
+    try:
+      result = self.execute([compiler_name, '-version'])
+      if 'Version:' in result:
+        return True
+    except:
+      pass
+    
+    return False
+    
+  # This should return:
+  #  an array when there were no parsing errors
+  #  None when there were parsing errors
+  #  an empty array when there were no errors and no completions
+  #  None if the file to parse isn't readable. rwtodo: I don't think it does this yet.
+  def get_completions_from_file(self, path, name_for_user):
+    metaprogram_name = 'CompletionsMetaprogram.jai'
+    
+    # debug sleep rwtodo
+    time.sleep(0.5)
+    
+    if path.endswith(metaprogram_name):
+      return None
+    # rwtodo: make this exception-safe. Return None on exception.
+    
+    # NOTE: when there are build warnings, no declarations are received from the compiler unless we set the current working directory to where the file lives. This might be a compiler bug.
+    args = ['jai', metaprogram_name, '--', name_for_user, os.path.basename(path)]
+    result = self.execute(args, os.path.dirname(path))
     
     result_lines = result.split('\n')
     
