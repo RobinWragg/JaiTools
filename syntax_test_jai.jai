@@ -131,6 +131,20 @@ omg := 34;
 temp :: ( /* */
   ) {}
 
+  named_returns :: () -> return_0: string, return_0: int {
+//^^^^^^^^^^^^^ entity.name.function.jai
+//              ^^ keyword.operator.assignment.jai
+//                 ^ punctuation.section.parameters.begin.jai
+//                  ^ punctuation.section.parameters.end.jai
+//                    ^^ keyword.other.jai
+//                       ^^^^^^^^ variable.other.jai
+//                               ^ keyword.operator.assignment.jai
+//                                 ^^^^^^ storage.type.jai
+//                                                       ^ meta.block.jai
+//^^^^^^^^^^^^^^^^^ meta.function.jai
+  }
+//^ meta.block.jai
+
   my_func_3 :: (my_param_0: My_Type, my_param_1: [] float) -> string {
 //^^^^^^^^^ entity.name.function.jai
 //          ^^ keyword.operator.assignment.jai
@@ -190,10 +204,17 @@ for element: array
 }
 
   My_Struct :: struct {
-//^^^^^^^^^ entity.name.struct.jai
-// todo: struct stuff.
+//^^^^^^^^^ variable.other.jai
+//          ^^ keyword.operator.assignment.jai
+//             ^^^^^^ storage.type.jai
+//                    ^ meta.block.jai punctuation.section.block.begin.jai
   member: float;
-}
+//^^^^^^ variable.other.jai
+//      ^ keyword.operator.assignment.jai
+//        ^^^^^ storage.type.jai
+//             ^ punctuation.terminator.jai
+  }
+//^ meta.block.jai punctuation.section.block.end.jai
 
 operator + :: (a: My_Struct, b: My_Struct) -> My_Struct {
   out : My_Struct = ---;
@@ -225,18 +246,6 @@ main :: () {
 //                                    ^^^^^^^ meta.function-call.jai
 //                                                                  ^ punctuation.terminator.jai
 
-// handle casts as a special case, so we can color the type that is being cast to. i.e. match 'cast' and 'cast,no_check', not the syntax for a function call.
-  cast(My_Struct) 4;
-//^^^^ meta.function-call.jai
-//     ^^^^^^^^^ storage.type.jai
-//                ^ constant.numeric.jai
-
-  cast,no_check(int) my_negative_float;
-//^^^^^^^^^^^^^ meta.function-call.jai
-//              ^^^ storage.type.jai
-//                   ^ variable.other.jai
-
-
   int_var := 4;
   if int_var == {
     case 3;
@@ -252,14 +261,11 @@ main :: () {
   for index: 0..7 {
 //^^^ keyword.control.jai
 //    ^^^^^ variable.other.jai
-//         ^ punctuation.separator.jai
+//         ^ keyword.operator.assignment.jai
 //           ^ constant.numeric.jai
-//            ^^ keyword.other.jai
+//            ^^ keyword.operator.jai
 //              ^ constant.numeric.jai
 }
-
-
-
 
 
 

@@ -270,6 +270,7 @@ contexts:
     - meta_scope: meta.function.jai
     - match: '->'
       scope: keyword.other.jai # TODO: enter return-list scope
+      push: proc_signature_return_list
     - include: non_assignment_operator
     - include: assignment_operator
     - match: '(?=\()'
@@ -277,7 +278,7 @@ contexts:
     - match: '(?=\s*{)'
       pop: true
   
-  parameter_list:
+  parameter_list: # This is for procedures and structs.
     - include: comment
     - match: '\('
       scope: punctuation.section.parameters.begin.jai
@@ -302,6 +303,18 @@ contexts:
               pop: true
     - match: '\)'
       scope: punctuation.section.parameters.end.jai
+      pop: true
+  
+  proc_signature_return_list:
+    - meta_scope: rwtodo.returnsig.jai
+    - match: '({{name}})\s*(:)'
+      captures:
+        1: variable.other.jai
+        2: keyword.operator.assignment.jai
+    - include: full_type
+    - match: ','
+      scope: punctuation.separator.jai
+    - match: '(?=\s*{)'
       pop: true
 
 
