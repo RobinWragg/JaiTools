@@ -4,7 +4,7 @@ import re
 # rwtodo: remove contents of herestrings, similarly to comments.
 # rwtodo: handle definitions that contain braces.
 
-class PythonParser:
+class CompletionParser:
   definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?(?:;|{|#string)')
   proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?[{;]')
   proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
