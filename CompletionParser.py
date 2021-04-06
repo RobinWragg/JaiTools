@@ -2,6 +2,7 @@ import sublime
 import re
 
 # rwtodo: remove contents of herestrings, similarly to comments.
+# rwtodo: handle definitions that contain braces.
 
 class PythonParser:
   definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?(?:;|{|#string)')

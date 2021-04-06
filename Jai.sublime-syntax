@@ -78,7 +78,7 @@ contexts:
   
   for_or_while_loop:
     - match: '\b(?:for|while)\b'
-      scope: keyword.control.flow.jai
+      scope: keyword.control.jai
       push:
         - include: constant_expression
         - include: array_subscript
@@ -106,15 +106,15 @@ contexts:
   
   keyword:
     - match: '\breturn\b'
-      scope: keyword.control.flow.return.jai
+      scope: keyword.control.jai
     - match: '\bbreak\b'
-      scope: keyword.control.flow.break.jai
+      scope: keyword.control.jai
     - match: '\bcontinue\b'
-      scope: keyword.control.flow.continue.jai
+      scope: keyword.control.jai
     - match: '\bcase\b'
-      scope: keyword.control.flow.case.jai
+      scope: keyword.control.jai
     - match: '\b(?:if|else)\b'
-      scope: keyword.control.flow.conditional.jai
+      scope: keyword.control.jai
     - match: '\b(?:using|xx|push_context|defer)\b'
       scope: keyword.other.jai
     - match: '---'

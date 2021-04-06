@@ -1,41 +1,21 @@
 from .Common import *
-from .PythonParser import *
-from .MetaprogramParser import *
+from .CompletionParser import *
 import sublime_plugin
 import time
 
-# TODO: use filename, not file path, for the UI filenames, unless it's part of a module, in which case print only the module name.
+# rwtodo: Use module names instead of filenames for the UI name if the completion came from a module.
 # rwtodo: ensure a buffer and a file path of the same code can't exist in the cache. That would result in duplicated completions. Maybe just watch for the file save event and delete the buffer then.
 # rwtodo: it appears that files that are open but not located in one of the project folders are not parsed. When this is fixed, ensure that files which are not included in the project folders are removed from the cache when they are closed.
+# rwtodo: Sublime Text doesn't resize the completions popup correctly if we give it too many completions. Gather completions from all open files, and the files/modules referenced by all #import and #load statements in the active file. Remove completions from the list if they don't contain the prefix given by on_query_completions.
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
-  gather_from_unopen_files = False # rwtodo: add this as a preference
   completion_index = {} # rwtodo: rename to completion_cache, and rename index_key to cache_key etc
-  parser = None
-  reindex_in_progress = False
-  
-  full_reindex_interval_secs = 60 * 10 # Ten minutes
-  last_full_reindex_secs = -full_reindex_interval_secs # Ensure re-indexing happens on launch
-  
-  def get_parser(self):
-    if self.parser == None:
-      settings = sublime.load_settings('JaiTools.sublime-settings')
-      
-      if settings.get('use_compiler_for_completions') == True:
-        self.parser = MetaprogramParser()
-      else:
-        self.parser = PythonParser()
-        
-    return self.parser
+  parser = CompletionParser()
   
   def get_all_index_keys(self):
     index_keys = set()
     
-    # Get jai file paths from all open folders
-    if self.gather_from_unopen_files:
-      index_keys = get_all_jai_project_file_paths()
-    
-    # Load all open jai views in case they're unsaved or external files
+    # Grab the index keys of all open jai views
     for view in sublime.active_window().views():
       if view_is_jai(view):
         index_keys.add(self.get_view_index_key(view))
@@ -56,30 +36,21 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     if isinstance(index_key, str):
       # index_key is a file path.
       ui_name = os.path.basename(index_key) # rwtodo: this should be the module name if the file is part of a standard module. Not sure about user modules.
-      completions = self.get_parser().get_completions_from_file(index_key, ui_name)
+      completions = self.parser.get_completions_from_file(index_key, ui_name)
+      
     else:
       # index_key is a buffer ID (int). This means the Jai code only exists in an unsaved view.
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
       for view in sublime.active_window().views():
         if view.buffer_id() == index_key:
           jai_text = get_view_contents(view)
-          completions = self.get_parser().get_completions_from_text(jai_text, 'unsaved')
+          completions = self.parser.get_completions_from_text(jai_text, 'unsaved')
           break
     
     return completions
   
   def index_view(self, view, is_async):
     if not view_is_jai(view):
-      return
-      
-    # If a full re-index hasn't been performed recently (see the value of
-    # full_reindex_interval_secs), and this function will not block the user (an async event),
-    # re-index everything in order to:
-    #  - Gather completions from files that are in the project but aren't open
-    #  - Remove deleted files (the API doesn't provide an event for file deletions)
-    #  - Index any file changes that were made outside of Sublime Text
-    if is_async and time.time() - self.last_full_reindex_secs > self.full_reindex_interval_secs:
-      self.reindex_everything()
       return
     
     index_key = self.get_view_index_key(view)
@@ -89,14 +60,10 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     if completions != None:
       self.completion_index[index_key] = completions
   
-  def reindex_everything(self):
-    if self.reindex_in_progress:
-      return
-    else:
-      self.reindex_in_progress = True
+  def initialize_index(self):
+    # Gather completions from all views.
     
-    print('JaiTools: Starting re-indexing of completions')
-    self.last_full_reindex_secs = time.time()
+    print('JaiTools: Starting re-indexing completions...')
     
     start_time = time.time()
     
@@ -112,16 +79,29 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     self.completion_index = new_completion_index
     
     duration_ms = int((time.time() - start_time) * 1000)
-    print('JaiTools: Full re-indexing of completions took ' + str(duration_ms) + 'ms')
-    self.reindex_in_progress = False
-    
-  def on_pre_close(self, view):
-    self.index_view(view, True)
+    print('JaiTools: Full re-indexing completions took ' + str(duration_ms) + 'ms')
   
-  def on_deactivated_async(self, view):
+  def on_post_save_async(self, view):
+    if not view_is_jai(view):
+      return None
+    
+    # If the view's buffer ID is a key in the index, it needs to be replaced with the view's file path.
+    # This is done by deleting the buffer ID and re-indexing the view.
+    if view.buffer_id() in self.completion_index:
+      del self.completion_index[view.buffer_id()]
+    
     self.index_view(view, True)
   
   def on_activated_async(self, view):
+    if not view_is_jai(view):
+      return None
+    
+    self.initialize_index()
+  
+  def on_deactivated_async(self, view):
+    if not view_is_jai(view):
+      return None
+      
     self.index_view(view, True)
   
   def on_query_completions(self, view, prefix, locations):
