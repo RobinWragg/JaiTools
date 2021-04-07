@@ -22,15 +22,14 @@ variables:
   name: '(?:\b|\$+)[a-zA-Z_]\w*'
   herestring_delimiter: '[\w\W]+?(?=\s)'
   commented_line: '//.*|/\*.*'
-  operator_symbol: '[+]'
+  operator_symbol: '[*+-/]' # rwtodo: This might not be complete.
 
 contexts:
   main:
     - include: comment
     - include: herestring # NOTE: Must have priority over general preprocessor rule.
     - include: proc_signature
-    - include: preprocessor_statement
-    - include: string_literal
+    - include: constant_expression
     - include: builtin_type
     - match: ';'
       scope: punctuation.terminator.jai
@@ -42,8 +41,6 @@ contexts:
     - include: keyword
     - include: non_assignment_operator
     - include: assignment_operator
-    - include: boolean_constant
-    - include: numeric_constant
     - match: '(?<=\w)\.(?=\w)' # NOTE: Must have priority over numerical constants.
       scope: punctuation.accessor.jai
     - include: procedure_call
@@ -68,6 +65,7 @@ contexts:
   
   constant_expression:
     - include: string_literal
+    - include: struct_literal
     - include: preprocessor_statement
     - include: boolean_constant
     - include: non_assignment_operator
@@ -141,6 +139,12 @@ contexts:
       scope: variable.other.jai
       push:
         - meta_scope: meta.variable.jai
+        # Anonymous structs and enums
+        - match: '(:)\s*(struct|enum\s+{{name}})\s*(?=\{)'
+          captures:
+            1: keyword.operator.assignment.jai
+            2: storage.type.jai
+          pop: true
         - match: ':'
           scope: keyword.operator.assignment.jai
           push:
@@ -187,6 +191,7 @@ contexts:
     - match: '\*'
       scope: keyword.operator.jai
     - include: array_subscript
+    - include: builtin_type
     - match: '{{name}}'
       scope: storage.type.jai
     - include: preprocessor_statement
@@ -238,6 +243,18 @@ contexts:
         - match: '%'
           scope: constant.other.placeholder.jai
         - match: '"'
+          pop: true
+  
+  struct_literal:
+    - match: '({{name}})(\.)({)'
+      captures:
+        1: storage.type.jai
+        2: punctuation.accessor.jai
+        3: punctuation.section.block.begin.jai
+      push:
+        - include: constant_expression
+        - match: '}'
+          scope: punctuation.section.block.end.jai
           pop: true
   
   # Matches a procedure signature, starting with the proc's name and ending before the opening '{'.

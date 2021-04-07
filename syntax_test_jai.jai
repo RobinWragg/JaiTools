@@ -174,7 +174,7 @@ to_c_string :: (s: string) -> *u8 {
     return result;
 }
 
-my_func :: (using s: MyStruct) {
+my_func :: (using s: My_Struct) {
   print(a);
 }
 
@@ -215,6 +215,17 @@ for element: array
 //             ^ punctuation.terminator.jai
   }
 //^ meta.block.jai punctuation.section.block.end.jai
+
+  my_struct := My_Struct.{0.3};
+//^^^^^^^^^ variable.other.jai
+//          ^^ keyword.operator.assignment.jai
+//             ^^^^^^^^^ storage.type.jai
+//                      ^ punctuation.accessor.jai
+//                       ^ punctuation.section.block.begin.jai
+//                        ^^^ constant.numeric.jai
+//                           ^ punctuation.section.block.end.jai
+//                            ^ punctuation.terminator.jai
+//^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
 operator + :: (a: My_Struct, b: My_Struct) -> My_Struct {
   out : My_Struct = ---;
@@ -267,6 +278,29 @@ main :: () {
 //              ^ constant.numeric.jai
 }
 
+// an enum found in Compiler.jai
+  output_type : enum u8 {
+//^^^^^^^^^^^ variable.other.jai
+//            ^ keyword.operator.assignment.jai
+//              ^^^^ storage.type.jai
+//                   ^^ storage.type.jai
+//                      ^ meta.block.jai punctuation.section.block.begin.jai
+    NO_OUTPUT       :: 0;
+//  ^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
+    EXECUTABLE      :: 1;
+    DYNAMIC_LIBRARY :: 2;
+    STATIC_LIBRARY  :: 3;
+  } = .EXECUTABLE;
+//^ meta.block.jai punctuation.section.block.end.jai
 
-
-
+immediate_multiplied_quad :: (m: Matrix4, v0: Vector3, v1: Vector3, v2: Vector3, v3: Vector3, color: Vector4) {
+  mult_v0 := (m * make_vector4(v0, 1.0)).xyz;
+//^^^^^^^ variable.other.jai
+  mult_v1 := (m * make_vector4(v1, 1.0)).xyz;
+  mult_v2 := (m * make_vector4(v2, 1.0)).xyz;
+  mult_v3 := (m * make_vector4(v3, 1.0)).xyz;
+  immediate_quad(mult_v0, mult_v1, mult_v2, mult_v3, color);
+}

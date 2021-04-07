@@ -2,7 +2,9 @@ import sublime
 import re
 
 # rwtodo: remove contents of herestrings, similarly to comments.
-# rwtodo: handle definitions that contain braces.
+# rwtodo: handle definitions that contain braces, such as struct literals: Vector3.{...}.
+# rwtodo: filter out duplicates, such as when completing "immediate_quad" from Simp/immediate.jai
+# rwtodo: if you write code to call a function, then write the function definition, it would be good if the name of the function is autocompleted when writing the definition. This can be done by grabbing the identifiers of any function calls that don't already exist in the completion list.
 
 class CompletionParser:
   definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?(?:;|{|#string)')
