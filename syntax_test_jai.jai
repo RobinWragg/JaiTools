@@ -227,13 +227,34 @@ for element: array
 //                            ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
+// rwtodo: annotate
 operator + :: (a: My_Struct, b: My_Struct) -> My_Struct {
   out : My_Struct = ---;
   out.member = a.member + b.member;
   return out;
 }
 
-fun :: (x: int) -> first: string = "Hello", second: string = "Sailor!" {
+// rwtodo: annotate
+operator += :: (a: int, b: float) -> int {
+  
+}
+
+  fun :: (x: int) -> first: string = "Hello", second: string = "Sailor!" {
+//^^^ entity.name.function.jai
+//    ^^ keyword.operator.assignment.jai
+//       ^ punctuation.section.parameters.begin.jai
+//        ^ variable.parameter.jai
+//         ^ keyword.operator.assignment.jai
+//           ^^^ storage.type.jai
+//              ^ punctuation.section.parameters.end.jai
+//                ^^ keyword.other.jai
+//                   ^^^^^ variable.other.jai
+//                        ^ keyword.operator.assignment.jai
+//                          ^^^^^^ storage.type.jai
+//                                 ^ keyword.operator.assignment.jai
+//                                   ^^^^^^^ string.quoted.double.jai
+//                                          ^ punctuation.separator.jai
+//                                                                       ^ meta.block.jai
     if x == 0 return;
     if x == 1 return "Simple";
     if x == 2 return "Simple", "Simon";
@@ -253,6 +274,7 @@ main :: () {
 //^^^^^ meta.function-call.jai
 //      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.jai
 //                    ^ constant.other.placeholder.jai
+//                             ^ constant.other.placeholder.jai
 //                               ^^ constant.character.escape.jai
 //                                    ^^^^^^^ meta.function-call.jai
 //                                                                  ^ punctuation.terminator.jai
@@ -266,7 +288,6 @@ main :: () {
     case;
       print("Not 3 or 4.\n");
   }
-
 } // end of main()
 
   for index: 0..7 {
@@ -296,11 +317,20 @@ main :: () {
   } = .EXECUTABLE;
 //^ meta.block.jai punctuation.section.block.end.jai
 
-immediate_multiplied_quad :: (m: Matrix4, v0: Vector3, v1: Vector3, v2: Vector3, v3: Vector3, color: Vector4) {
-  mult_v0 := (m * make_vector4(v0, 1.0)).xyz;
-//^^^^^^^ variable.other.jai
-  mult_v1 := (m * make_vector4(v1, 1.0)).xyz;
-  mult_v2 := (m * make_vector4(v2, 1.0)).xyz;
-  mult_v3 := (m * make_vector4(v3, 1.0)).xyz;
-  immediate_quad(mult_v0, mult_v1, mult_v2, mult_v3, color);
+a_mathy_procedure :: (m: Matrix4, v: Vector3) {
+  mult_once := (m * make_vector4(v, 1.0)).xyz;
+//^^^^^^^^^ variable.other.jai
+  mult_twice := (m * make_vector4(mult_once, 1.0)).xyz;
+//^^^^^^^^^^ variable.other.jai
 }
+
+// Copied from Compiler.jai.
+  compiler_create_workspace  :: (name := "") -> Workspace #compiler;
+//^^^^^^^^^^^^^^^^^^^^^^^^^ entity.name.function.jai
+//                                                        ^^^^^^^^^ meta.preprocessor.jai
+  compiler_destroy_workspace :: (w: Workspace) #compiler;
+//^^^^^^^^^^^^^^^^^^^^^^^^^^ entity.name.function.jai
+
+
+
+

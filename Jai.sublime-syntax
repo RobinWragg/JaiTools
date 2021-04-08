@@ -22,7 +22,7 @@ variables:
   name: '(?:\b|\$+)[a-zA-Z_]\w*'
   herestring_delimiter: '[\w\W]+?(?=\s)'
   commented_line: '//.*|/\*.*'
-  operator_symbol: '[*+-/]' # rwtodo: This might not be complete.
+  operator_symbol: '[*+-/](?:=)?' # rwtodo: This might not be complete.
 
 contexts:
   main:
@@ -271,7 +271,7 @@ contexts:
       push: proc_signature_post_name
       
     # Match the first comma in the parameter list.
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\([^\)]+,)'
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(\s*{{name}}\s*,)'
       scope: entity.name.function.jai
       push: proc_signature_post_name
       
@@ -292,7 +292,7 @@ contexts:
     - include: assignment_operator
     - match: '(?=\()'
       push: parameter_list
-    - match: '(?=\s*{)'
+    - match: '\s*(?={|;|#\w+)'
       pop: true
   
   parameter_list: # This is for procedures and structs.
@@ -323,15 +323,21 @@ contexts:
       pop: true
   
   proc_signature_return_list:
-    - meta_scope: rwtodo.returnsig.jai
     - match: '({{name}})\s*(:)'
       captures:
         1: variable.other.jai
         2: keyword.operator.assignment.jai
     - include: full_type
+    # Default return values:
+    - match: '\s*=\s*'
+      scope: keyword.operator.assignment.jai
+      push:
+        - include: constant_expression
+        - match: '\s*(?=,|{|,|#\w+)'
+          pop: true
     - match: ','
       scope: punctuation.separator.jai
-    - match: '(?=\s*{)'
+    - match: '\s*(?={|;|#\w+)'
       pop: true
 
 

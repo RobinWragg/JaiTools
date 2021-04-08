@@ -14,21 +14,9 @@ JaiTools indexes your open files for completions. For the best experience, make 
 
 Begin typing a procedure call to view the matching symbols in your project. Type more to narrow down the list, or use the arrow keys to pick the right procedure. Hit Tab to complete it and jump to its parameter, hit Tab again to jump to the second parameter, etc.
 
-In the future, your entire project including Jai's standard library will be indexed for completions. Efficiency improvements have to be made first.
-
 ### Goto
 
-Goto Symbol (ctrl+R/cmd+R) shows all the top-level symbols in the file including procedure parameters, so you can easily tell the difference between multiple overloaded procedures. Nested procedures (procedures defined locally inside other procedures) are also shown with indentation to indicate the scope heirarchy. Goto Symbol in Project (shift+ctrl+R/shift+cmd+R) shows all top-level symbols in your project, but doesn't show procedure parameters (yet).
-
-## Planned Work
-
-- Investigation as to whether the compiler can be leveraged for completions. This will hopefully guarantee completion robustness and boost CPU efficiency. This should enable gathering completions from all files, not just the ones you have open.
-- Consolidated syntax tests which can be executed by both Jai and Sublime Text. This is particularly important because the language's syntax isn't set in stone yet.
-- Add Jai's standard library code to the autocompletion system.
-- Hover over a struct to see its members.
-- A "quick build" feature, for executing the compiler on the current Jai file.
-- Syntax highlighting for Jai's build output.
-- Features for enabling the user to add their custom building requirements to their project in a hassle-free way, including showing errors and warnings in-line with code.
+Goto Symbol (ctrl+R/cmd+R) shows all the top-level symbols in the file including procedure parameters, so you can easily tell the difference between multiple overloaded procedures. Goto Symbol in Project (shift+ctrl+R/shift+cmd+R) shows all top-level symbols in your project, but doesn't show procedure parameters (yet).
 
 Suggestions, issues, pull requests and other contributions are very welcome!
 
