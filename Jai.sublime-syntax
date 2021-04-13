@@ -28,7 +28,7 @@ contexts:
   main:
     - include: comment
     - include: herestring # NOTE: Must have priority over general preprocessor rule.
-    - include: proc_signature
+    - include: proc_declaration
     - include: constant_expression
     - include: builtin_type
     - match: ';'
@@ -41,7 +41,7 @@ contexts:
     - include: keyword
     - include: non_assignment_operator
     - include: assignment_operator
-    - match: '(?<=\w)\.(?=\w)' # NOTE: Must have priority over numerical constants.
+    - match: '(?<=\w|\))\.(?=\w)' # NOTE: Must have priority over numerical constants.
       scope: punctuation.accessor.jai
     - include: procedure_call
   
@@ -111,7 +111,7 @@ contexts:
       scope: keyword.control.jai
     - match: '\bcase\b'
       scope: keyword.control.jai
-    - match: '\b(?:if|else)\b'
+    - match: '\b(?:if|ifx|then|else)\b'
       scope: keyword.control.jai
     - match: '\b(?:using|xx|push_context|defer)\b'
       scope: keyword.other.jai
@@ -129,7 +129,7 @@ contexts:
       scope: keyword.operator.bitwise.jai
     - match: '[><!]|=='
       scope: keyword.operator.logical.jai
-    - match: '[+*/-]'
+    - match: '[%+*/-]'
       scope: keyword.operator.arithmetic.jai
     - match: '\.\.'
       scope: keyword.operator.jai
@@ -257,39 +257,22 @@ contexts:
           scope: punctuation.section.block.end.jai
           pop: true
   
-  # Matches a procedure signature, starting with the proc's name and ending before the opening '{'.
-  # This includes operator procedures.
-  proc_signature:
-    # Match the '->' symbol for the return value(s), or '\)\s*{' which means no return value.
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(.*?\)\s*(?:->|{|#))'
+  # Matches the start of a procedure declaration. This includes operator procedures.
+  proc_declaration:
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*(?:inline\s*)?\(\s*(?:{{name}}\s*:|//|\)|$))'
       scope: entity.name.function.jai
-      push: proc_signature_post_name
-    
-    # # Match a newline after the closing parenthesis.
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(.*?\)\s*(?:{{commented_line}})?\s*$)'
-      scope: entity.name.function.jai
-      push: proc_signature_post_name
-      
-    # Match the first comma in the parameter list.
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(\s*{{name}}\s*,)'
-      scope: entity.name.function.jai
-      push: proc_signature_post_name
-      
-    # Match an end of line after the opening parenthesis. This is not guaranteed to be a proc, but
-    # we assume it is as it's the best we can do if the previous matches fail due to newlines in the
-    # middle of the parameters etc.
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*\(\s*(?:{{commented_line}})?$)'
-      scope: entity.name.function.jai
-      push: proc_signature_post_name
+      push: proc_declaration_post_name
   
-  # Matches part of a procedure signature, starting with :: or := and ending before the opening '{'.
-  proc_signature_post_name:
+  # Matches part of a procedure declaration, starting with :: or := and ending before the opening '{'.
+  proc_declaration_post_name:
     - meta_scope: meta.function.jai
     - match: '->'
       scope: keyword.other.jai # TODO: enter return-list scope
-      push: proc_signature_return_list
+      push: proc_declaration_return_list
     - include: non_assignment_operator
     - include: assignment_operator
+    - match: '\binline\b'
+      scope: keyword.other.jai
     - match: '(?=\()'
       push: parameter_list
     - match: '\s*(?={|;|#\w+)'
@@ -322,7 +305,7 @@ contexts:
       scope: punctuation.section.parameters.end.jai
       pop: true
   
-  proc_signature_return_list:
+  proc_declaration_return_list:
     - match: '({{name}})\s*(:)'
       captures:
         1: variable.other.jai

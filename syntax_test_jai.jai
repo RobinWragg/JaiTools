@@ -76,8 +76,15 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 //                           ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
-pointer_array : *[] int;
-// This is not currently being tagged as meta.variable.jai, which breaks goto.
+  pointer_array : *[] int;
+//^^^^^^^^^^^^^ variable.other.jai
+//              ^ keyword.operator.assignment.jai
+//                ^ keyword.operator.jai
+//                 ^ punctuation.section.brackets.begin.jai
+//                  ^ punctuation.section.brackets.end.jai
+//                    ^^^ storage.type.jai
+//                       ^ punctuation.terminator.jai
+//^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
   my_func_0 :: () {
 //^^^^^^^^^ entity.name.function.jai
@@ -312,16 +319,34 @@ main :: () {
 //                     ^ constant.numeric.jai
 //                      ^ punctuation.terminator.jai
     EXECUTABLE      :: 1;
+//  ^^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
     DYNAMIC_LIBRARY :: 2;
+//  ^^^^^^^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
     STATIC_LIBRARY  :: 3;
+//  ^^^^^^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
   } = .EXECUTABLE;
 //^ meta.block.jai punctuation.section.block.end.jai
+//    ^ punctuation.accessor.jai
+//     ^^^^^^^^^^ variable.other.jai
+//               ^ punctuation.terminator.jai
 
 a_mathy_procedure :: (m: Matrix4, v: Vector3) {
   mult_once := (m * make_vector4(v, 1.0)).xyz;
 //^^^^^^^^^ variable.other.jai
+//                                       ^ punctuation.accessor.jai
   mult_twice := (m * make_vector4(mult_once, 1.0)).xyz;
 //^^^^^^^^^^ variable.other.jai
+//                                                ^ punctuation.accessor.jai
+  a := 5 % 24;
 }
 
 // Copied from Compiler.jai.
@@ -331,6 +356,24 @@ a_mathy_procedure :: (m: Matrix4, v: Vector3) {
   compiler_destroy_workspace :: (w: Workspace) #compiler;
 //^^^^^^^^^^^^^^^^^^^^^^^^^^ entity.name.function.jai
 
+proc :: inline () {
+  write_string(ifx value then "true" else "false");
+}
 
-
+  proc_no_params :: (   );
+//^^^^^^^^^^^^^^ entity.name.function.jai
+//    ^^ keyword.operator.assignment.jai
+//       ^ punctuation.section.parameters.begin.jai
+//        ^ variable.parameter.jai
+//         ^ keyword.operator.assignment.jai
+//           ^^^ storage.type.jai
+//              ^ punctuation.section.parameters.end.jai
+//                ^^ keyword.other.jai
+//                   ^^^^^ variable.other.jai
+//                        ^ keyword.operator.assignment.jai
+//                          ^^^^^^ storage.type.jai
+//                                 ^ keyword.operator.assignment.jai
+//                                   ^^^^^^^ string.quoted.double.jai
+//                                          ^ punctuation.separator.jai
+//                                                                       ^ meta.block.jai
 
