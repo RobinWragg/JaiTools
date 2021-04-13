@@ -342,6 +342,7 @@ main :: () {
 a_mathy_procedure :: (m: Matrix4, v: Vector3) {
   mult_once := (m * make_vector4(v, 1.0)).xyz;
 //^^^^^^^^^ variable.other.jai
+//                                        ^^^ variable.other.jai
 //                                       ^ punctuation.accessor.jai
   mult_twice := (m * make_vector4(mult_once, 1.0)).xyz;
 //^^^^^^^^^^ variable.other.jai
@@ -362,18 +363,7 @@ proc :: inline () {
 
   proc_no_params :: (   );
 //^^^^^^^^^^^^^^ entity.name.function.jai
-//    ^^ keyword.operator.assignment.jai
-//       ^ punctuation.section.parameters.begin.jai
-//        ^ variable.parameter.jai
-//         ^ keyword.operator.assignment.jai
-//           ^^^ storage.type.jai
-//              ^ punctuation.section.parameters.end.jai
-//                ^^ keyword.other.jai
-//                   ^^^^^ variable.other.jai
-//                        ^ keyword.operator.assignment.jai
-//                          ^^^^^^ storage.type.jai
-//                                 ^ keyword.operator.assignment.jai
-//                                   ^^^^^^^ string.quoted.double.jai
-//                                          ^ punctuation.separator.jai
-//                                                                       ^ meta.block.jai
-
+//               ^^ keyword.operator.assignment.jai
+//                  ^ punctuation.section.parameters.begin.jai
+//                      ^ punctuation.section.parameters.end.jai
+//                       ^ punctuation.terminator.jai
