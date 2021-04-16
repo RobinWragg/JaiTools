@@ -63,8 +63,6 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
   def initialize_index(self):
     # Gather completions from all views.
     
-    print('JaiTools: Starting re-indexing completions...')
-    
     start_time = time.time()
     
     new_completion_index = {}
@@ -79,7 +77,6 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     self.completion_index = new_completion_index
     
     duration_ms = int((time.time() - start_time) * 1000)
-    print('JaiTools: Full re-indexing completions took ' + str(duration_ms) + 'ms')
   
   def on_post_save_async(self, view):
     if not view_is_jai(view):

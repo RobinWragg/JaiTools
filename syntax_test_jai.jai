@@ -1,4 +1,4 @@
-// SYNTAX TEST "Packages/JaiTools/Jai.sublime-syntax"
+// SYNTAX TEST "Packages/JaiToolsDev/Jai.sublime-syntax"
 
   #import "Basic";
 //^^^^^^^ keyword.control.import.jai
@@ -25,14 +25,6 @@ DONE
 //                     ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
-  my_var_123 := my_func();
-//^^^^^^^^^^ variable.other.jai
-//           ^^ keyword.operator.assignment.jai
-//              ^^^^^^^ variable.function.jai
-//              ^^^^^^^ meta.function-call.jai
-//                       ^ punctuation.terminator.jai
-//^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
-
   commented_var_0 := /**/ 42 /**/ ;
 //^^^^^^^^^^^^^^^ variable.other.jai
 //                ^^ keyword.operator.assignment.jai
@@ -42,7 +34,7 @@ DONE
 //                                ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
   
-  commented_var_0 : int = 42;
+  commented_var_1 : int = 42;
 //^^^^^^^^^^^^^^^ variable.other.jai
 //                ^ keyword.operator.assignment.jai
 //                  ^^^ storage.type.jai
@@ -55,8 +47,6 @@ DONE
 //                     ^ keyword.operator.arithmetic.jai
 //                      ^^^^^^^^^^^^^^^^^ constant.numeric.jai
 
-my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
-
   my_array : [4] int;
 //^^^^^^^^ variable.other.jai
 //         ^ keyword.operator.assignment.jai
@@ -67,14 +57,14 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
 //                  ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
-  my_array : [my_var] My_Type;
-//^^^^^^^^ variable.other.jai
-//         ^ keyword.operator.assignment.jai
-//           ^ punctuation.section.brackets.begin.jai
-//                  ^ punctuation.section.brackets.end.jai
-//                    ^^^^^^^ storage.type.jai
-//                           ^ punctuation.terminator.jai
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
+  my_array2 : [my_var] Abcdefe;
+//^^^^^^^^^ variable.other.jai
+//          ^ keyword.operator.assignment.jai
+//            ^ punctuation.section.brackets.begin.jai
+//                   ^ punctuation.section.brackets.end.jai
+//                     ^^^^^^^ storage.type.jai
+//                            ^ punctuation.terminator.jai
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
   pointer_array : *[] int;
 //^^^^^^^^^^^^^ variable.other.jai
@@ -109,7 +99,7 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
   }
 //^ meta.block.jai
 
-  my_func_2 :: (my_param_0: My_Type, my_param_1: [] float) {
+  my_func_2 :: (my_param_0: Abcdefe, my_param_1: [] float) {
 //^^^^^^^^^ entity.name.function.jai
 //          ^^ keyword.operator.assignment.jai
 //             ^ punctuation.section.parameters.begin.jai
@@ -128,17 +118,7 @@ my_parenthesis_var := (my_negative_float + 3.0) * commented_var_1;
   }
 //^ meta.block.jai
 
-temp :: (
-  ) {}
-temp :: ( // 235253 
-  ) {}
-
-omg := 34;
-
-temp :: ( /* */
-  ) {}
-
-  named_returns :: () -> return_0: string, return_0: int {
+  named_returns :: () -> return_0: string, return_1: int {
 //^^^^^^^^^^^^^ entity.name.function.jai
 //              ^^ keyword.operator.assignment.jai
 //                 ^ punctuation.section.parameters.begin.jai
@@ -149,10 +129,11 @@ temp :: ( /* */
 //                                 ^^^^^^ storage.type.jai
 //                                                       ^ meta.block.jai
 //^^^^^^^^^^^^^^^^^ meta.function.jai
+    return "ewf", 354;
   }
 //^ meta.block.jai
 
-  my_func_3 :: (my_param_0: My_Type, my_param_1: [] float) -> string {
+  my_func_3 :: (my_param_0: Abcdefe, my_param_1: [] float) -> string {
 //^^^^^^^^^ entity.name.function.jai
 //          ^^ keyword.operator.assignment.jai
 //             ^ punctuation.section.parameters.begin.jai
@@ -181,18 +162,26 @@ to_c_string :: (s: string) -> *u8 {
     return result;
 }
 
-my_func :: (using s: My_Struct) {
-  print(a);
+  my_func :: (using s: My_Struct) {
+//^^^^^^^ entity.name.function.jai
+//        ^^ keyword.operator.assignment.jai
+//           ^ punctuation.section.parameters.begin.jai
+//            ^^^^^ keyword.other.jai
+//                  ^ variable.parameter.jai
+//                   ^ keyword.operator.assignment.jai
+//                     ^^^^^^^^^ storage.type.jai
+//                              ^ punctuation.section.parameters.end.jai
+  print("hello");
 }
 
 multi_line_func_0 :: (
-	my_param_0: My_Type,
+	my_param_0: Abcdefe,
 	my_param_1: [] float) -> string
 {
 	
 }
 
-multi_line_func_1 :: (my_param_0: My_Type,
+multi_line_func_1 :: (my_param_0: Abcdefe,
 	my_param_1: [] float
 	) -> string
 {
@@ -200,15 +189,6 @@ multi_line_func_1 :: (my_param_0: My_Type,
 }
 
 multi_line_func_1(f, 4);
-
-for element: array {
-	
-}
-
-for element: array
-{
-	
-}
 
   My_Struct :: struct {
 //^^^^^^^^^ variable.other.jai
@@ -242,8 +222,8 @@ operator + :: (a: My_Struct, b: My_Struct) -> My_Struct {
 }
 
 // rwtodo: annotate
-operator += :: (a: int, b: float) -> int {
-  
+operator += :: (a: My_Struct, b: float) -> int {
+  return 23_5;
 }
 
   fun :: (x: int) -> first: string = "Hello", second: string = "Sailor!" {
@@ -273,37 +253,6 @@ operator += :: (a: int, b: float) -> int {
 varfunc := ()
 {
   
-}
-
-main :: () {
-  local_var_0 := 42.42;
-  print("A is of type %, value %.\n", type_of(local_var), local_var);
-//^^^^^ meta.function-call.jai
-//      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.jai
-//                    ^ constant.other.placeholder.jai
-//                             ^ constant.other.placeholder.jai
-//                               ^^ constant.character.escape.jai
-//                                    ^^^^^^^ meta.function-call.jai
-//                                                                  ^ punctuation.terminator.jai
-
-  int_var := 4;
-  if int_var == {
-    case 3;
-      print("3.\n");
-    case 4;
-      print("4.\n");
-    case;
-      print("Not 3 or 4.\n");
-  }
-} // end of main()
-
-  for index: 0..7 {
-//^^^ keyword.control.jai
-//    ^^^^^ variable.other.jai
-//         ^ keyword.operator.assignment.jai
-//           ^ constant.numeric.jai
-//            ^^ keyword.operator.jai
-//              ^ constant.numeric.jai
 }
 
 // an enum found in Compiler.jai
@@ -361,9 +310,45 @@ proc :: inline () {
   write_string(ifx value then "true" else "false");
 }
 
-  proc_no_params :: (   );
+  proc_no_params :: (   ) {
 //^^^^^^^^^^^^^^ entity.name.function.jai
 //               ^^ keyword.operator.assignment.jai
 //                  ^ punctuation.section.parameters.begin.jai
 //                      ^ punctuation.section.parameters.end.jai
-//                       ^ punctuation.terminator.jai
+  }
+  
+  
+  
+main :: () {
+  build_options := get_build_options();
+  build_options.output_type = .NO_OUTPUT;
+  set_build_options(build_options);
+  
+  for index: 0..7 {
+//^^^ keyword.control.jai
+//    ^^^^^ variable.other.jai
+//         ^ keyword.operator.assignment.jai
+//           ^ constant.numeric.jai
+//            ^^ keyword.operator.jai
+//              ^ constant.numeric.jai
+  }
+  
+  print("A is of type %, value %.\n", type_of(local_var), local_var);
+//^^^^^ meta.function-call.jai
+//      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.jai
+//                    ^ constant.other.placeholder.jai
+//                             ^ constant.other.placeholder.jai
+//                               ^^ constant.character.escape.jai
+//                                    ^^^^^^^ meta.function-call.jai
+//                                                                  ^ punctuation.terminator.jai
+
+  my_var_123 := a_mathy_procedure(.{}, .{});
+//^^^^^^^^^^ variable.other.jai
+//           ^^ keyword.operator.assignment.jai
+//              ^^^^^^^^^^^^^^^^^ variable.function.jai
+//              ^^^^^^^^^^^^^^^^^ meta.function-call.jai
+//                                         ^ punctuation.terminator.jai
+//^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
+}
+
+#run main();

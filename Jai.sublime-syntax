@@ -261,7 +261,7 @@ contexts:
   
   # Matches the start of a procedure declaration. This includes operator procedures.
   proc_declaration:
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*(?:inline\s*)?\(\s*(?:{{name}}\s*:|//|\)|$))'
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*(?:#\w*|inline)?\s*\(\s*(?:{{name}}\s*:|//|\)|$))'
       scope: entity.name.function.jai
       push: proc_declaration_post_name
   
@@ -275,6 +275,8 @@ contexts:
     - include: assignment_operator
     - match: '\binline\b'
       scope: keyword.other.jai
+    - match: '#\w*\b'
+      scope: meta.preprocessor.jai
     - match: '(?=\()'
       push: parameter_list
     - match: '\s*(?={|;|#\w+)'
