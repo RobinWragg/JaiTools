@@ -1,128 +1,255 @@
 import sublime
 import re
 
-# rwtodo: remove contents of herestrings, similarly to comments.
-# rwtodo: handle definitions that contain braces, such as struct literals: Vector3.{...}.
-# rwtodo: filter out duplicates, such as when completing "immediate_quad" from Simp/immediate.jai
-# rwtodo: if you write code to call a function, then write the function definition, it would be good if the name of the function is autocompleted when writing the definition. This can be done by grabbing the identifiers of any function calls that don't already exist in the completion list.
+# rwtodo: active file: all identifiers. all procs.
+# rwtodo: inactive files: all declarations in module/export scope.
+# rwtodo: Handle the 'using' keyword for params. just remove them?
+# rwtodo: Braces in completions break Sublime's completion engine. Hopefully I can just backslash them.
 
 class CompletionParser:
-  definition_pattern = re.compile(r'\b\w+\s*:[\w\W]*?(?:;|{|#string)')
-  proc_pattern = re.compile(r'\b(\w+)\s*:\s*[:=]\s*\(([\w\W]*?)\)\s*(?:->\s*(.*?)\s*)?[{;]')
-  proc_params_pattern = re.compile(r'(?:^|)\s*([^,]+?)\s*(?:$|,)')
-  line_comment_pattern = re.compile(r'//.*?(?=\n)')
+  def get_completions_from_file(self, path, ui_file_name):
+    text = self._get_file_contents(path)
+    return self.get_completions_from_text(text, ui_file_name)
   
-  # We can get completions for text or from a file; note that it is currently easier to get
-  # completions from text, but it will be easier for the metaprogram to get completions from a file.
-  
-  def get_completions_from_file(self, path, name_for_user):
-    jai_text = self._get_file_contents(path)
-    return self.get_completions_from_text(jai_text, name_for_user)
-  
-  def get_completions_from_text(self, jai_text, file_name_for_user):
-    definitions = self._extract_definitions_from_text(jai_text)
+  whitespace_pattern = re.compile(r'\s+')
+  proc_decl_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\(\s*(?:\$*?\w+\s*:|\)).*?[{;]')
+  proc_decl_grouping_pattern = re.compile(r'(\w+)[\w\W]+?\(\s*(.+?)\s*\)\s*(->.+?)?\s*[#{;]')
+  def get_completions_from_text(self, text, ui_file_name):
+    # NOTE: The order of these text manipulation functions is important.
+    
+    text = self._remove_herestring_contents(text)
+    text = self._remove_comments(text)
+    
+    # rwtodo: this is just for non-active files
+    text = self._remove_file_scopes(text)
+    
+    # Remove excessive whitespace
+    text = self.whitespace_pattern.sub(' ', text)
+    
+    masked_text = self._mask_string_literals(text)
+    masked_text = self._mask_struct_literals(masked_text)
+    
+    proc_decl_matches = self.proc_decl_pattern.finditer(masked_text)
     
     completions = []
+    proc_identifiers = set()
     
-    for definition in definitions:
-      # Replace all whitespace with single spaces. This resolves some formatting issues.
-      definition = re.sub(r'\s+', ' ', definition)
+    for match in proc_decl_matches:      
+      decl = text[match.start():match.end()]
+      masked_decl = match.group(0)
       
-      if self.proc_pattern.search(definition) == None:
-        completion = self._make_completion_from_variable_definition(definition, file_name_for_user)
-        completions.append(completion)
+      grouped_match = self.proc_decl_grouping_pattern.search(masked_decl)
+      
+      if grouped_match:
+        identifier = grouped_match.group(1)
+        proc_identifiers.add(identifier)
+        
+        params_string = decl[grouped_match.start(2):grouped_match.end(2)]
+        masked_params_string = self._mask_parentheses(grouped_match.group(2))
+        
+        params = self._split_params(params_string, masked_params_string)
+        
+        suffix = decl[grouped_match.start(3):grouped_match.end(3)].strip()
+        
+        if len(suffix) == 0:
+          suffix = None
+        
+        completions.append(self._make_proc_completion(identifier, params, suffix, ui_file_name))
       else:
-        completions += self._make_completions_from_proc_definition(definition, file_name_for_user)
+        print('JaiTools: Failed to deconstruct procedure: ' + match.group(0))
+    
+    # rwtodo: don't filter out nested decls for the active file. Create _get_all_words()?
+    # rwtodo: don't collect param identifiers for non-active files.
+    identifiers = self._get_declaration_identifiers(masked_text)
+    identifiers -= proc_identifiers
+    
+    for identifier in identifiers:
+      completions.append(self._make_generic_completion(identifier, ui_file_name))
+    
+    # Enforce a maximum width. rwtodo: don't know if this is a significant performance hit yet. Might be better to do this when each completion is created, to avoid the cost of iteration and indexing into the list.
+    max_length = 90
+    for c in range(len(completions)):
+      if len(completions[c][0]) > 50:
+        list_entry = completions[c][0]
+        prefix_length = max_length // 2
+        suffix_length = max_length // 2 - 3
+        completions[c][0] = list_entry[:prefix_length] + '...' + list_entry[-suffix_length:]
     
     return completions
   
-  def _strip_block_comments(self, jai_text):
-    non_comments = []
+  comma_pattern = re.compile(r',')
+  param_components_pattern = re.compile(r'(\$*?\w+)\s*:\s*(.+?)\s*$')
+  def _split_params(self, params_string, masked_params_string):
+    if len(params_string.strip()) == 0:
+      return []
     
-    comment_end_index = 0
-    block_comment_depth = 0
+    # Split masked_params_string by comma, and use the indices to split the non-masked params_string
+    params = []
+    param_start_index = 0
     
-    for i in range(len(jai_text)):
-      if jai_text[i:i+2] == '/*':
-        if block_comment_depth == 0:
-          non_comment = jai_text[comment_end_index:i]
-          non_comments.append(non_comment)
-        block_comment_depth += 1
-      elif jai_text[i-2:i] == '*/':
-        block_comment_depth -= 1
-        if block_comment_depth == 0:
-          comment_end_index = i
-        if block_comment_depth < 0:
-          block_comment_depth = 0
+    for comma_match in self.comma_pattern.finditer(masked_params_string):
+      comma_index = comma_match.start()
+      params.append(params_string[param_start_index:comma_index])
+      param_start_index = comma_match.end()
+    params.append(params_string[param_start_index:])
     
-    non_comments.append(jai_text[comment_end_index:])
-    return ''.join(non_comments)
+    def remove_param_whitespace(param):
+      match = self.param_components_pattern.search(param)
+      return match.group(1) + ': ' + match.group(2)
+      
+    return list(map(remove_param_whitespace, params))
   
-  def _strip_line_comments(self, jai_text):
-    return self.line_comment_pattern.sub('', jai_text)
+  brace_or_decl_pattern = re.compile(r'[{}]|([`$]*\w+)\s?:')
+  def _get_declaration_identifiers(self, text):
+    declarations = set()
+    start_index = 0
+    block_depth = 0
+    
+    while True:
+      match = self.brace_or_decl_pattern.search(text, pos=start_index)
+      
+      if match == None:
+        break
+        
+      match_str = match.group(0)
+      
+      if match_str == '{':
+        block_depth += 1
+      elif match_str == '}':
+        block_depth -= 1
+      elif block_depth == 0:
+        identifier = match.group(1)
+        declarations.add(identifier)
+        # rwtodo: if the identifier is an enum, enum_flags or struct decl with a block, grab the members. Don't forget that struct members can be 'using', but it should 'just work' if you're looking for a colon prefix, unless you can do anonymous 'using's. Don't know.
+        
+      start_index = match.end()
+    
+    return declarations
   
-  def _make_completions_from_proc_components(self, proc_name, params, return_type, file_name):
+  def _mask_string_literals(self, text):
+    inside_string_literal = False
+    
+    pieces = []
+    piece_start_index = 0
+    
+    for i in range(len(text)):
+      if text[i] == '"' and (i == 0 or text[i-1] != '\\'):
+        if inside_string_literal:
+          pieces.append('"' * (i+1 - piece_start_index))
+          piece_start_index = i + 1
+        else:
+          pieces.append(text[piece_start_index:i])
+          piece_start_index = i
+        
+        inside_string_literal = not inside_string_literal
+    
+    if not inside_string_literal: # If the file ends inside a string literal, we don't care.
+      # Append the remaining piece
+      pieces.append(text[piece_start_index:])
+      piece_start_index = i
+    
+    return ''.join(pieces)
+  
+  struct_literal_pattern = re.compile(r'\.{[^(?:\.{)]*?}')
+  def _mask_struct_literals(self, text):
+    # Keep overwriting all occurrences of literals that don't contain nested literals until none are left.
+    text_changed = True
+    
+    while text_changed:
+      text_changed = False
+      
+      matches = self.struct_literal_pattern.finditer(text)
+      pieces = []
+      piece_start_index = 0
+      
+      for match in matches:
+        piece_end_index = match.start()
+        pieces.append(text[piece_start_index:piece_end_index])
+        
+        piece_start_index = match.start()
+        piece_end_index = match.end()
+        pieces.append('"' * (piece_end_index - piece_start_index))
+        piece_start_index = piece_end_index
+      
+      # Append the last piece
+      pieces.append(text[piece_start_index:])
+      
+      modified_text = ''.join(pieces)
+      
+      if modified_text != text:
+        text_changed = True
+        text = modified_text
+    
+    return text
+  
+  parentheses_pattern = re.compile(r'\([^(]*?\)')
+  def _mask_parentheses(self, text):
+    # Keep overwriting all occurrences of literals that don't contain nested literals until none are left.
+    text_changed = True
+    
+    while text_changed:
+      text_changed = False
+      
+      matches = self.parentheses_pattern.finditer(text)
+      pieces = []
+      piece_start_index = 0
+      
+      for match in matches:
+        piece_end_index = match.start()
+        pieces.append(text[piece_start_index:piece_end_index])
+        
+        piece_start_index = match.start()
+        piece_end_index = match.end()
+        pieces.append('"' * (piece_end_index - piece_start_index))
+        piece_start_index = piece_end_index
+      
+      # Append the last piece
+      pieces.append(text[piece_start_index:])
+      
+      modified_text = ''.join(pieces)
+      
+      if modified_text != text:
+        text_changed = True
+        text = modified_text
+    
+    return text
+  
+  comment_pattern = re.compile(r'//.*?(?=\n)|\/\*[\w\W]*?\*\/')
+  def _remove_comments(self, text):
+    return self.comment_pattern.sub('', text)
+  
+  file_scope_pattern = re.compile(r'(?<=\n)\s*?#scope_file[\w\W]*?(?=#scope_)')
+  def _remove_file_scopes(self, text):
+    return self.file_scope_pattern.sub('', text)
+  
+  herestring_contents_pattern = re.compile(r'#string\s+(\w+)\s[\w\W]*?\1')
+  def _remove_herestring_contents(self, text):
+    return self.herestring_contents_pattern.sub('#string;', text)
+  
+  def _make_proc_completion(self, proc_name, params, suffix, file_name):
     trigger = proc_name + '('
     result = proc_name + '('
     
-    if len(params) > 0:
-      for p in range(len(params)):
-        if p > 0:
-          trigger += ', '
-          result += ', '
-          
-        trigger += params[p]
-        result += '${' + str(p+1) + ':' + params[p] + '}'
+    for p in range(len(params)):
+      if p > 0:
+        trigger += ', '
+        result += ', '
+        
+      trigger += params[p]
+      result += '${' + str(p+1) + ':' + params[p] + '}'
     
     trigger += ')'
     result += ')'
     
-    if return_type != None:
-      trigger += ' -> ' + return_type
+    if suffix:
+      trigger += suffix
     
     trigger += '\t ' + file_name
     
-    # proc completion
-    completions = [[trigger, result]]
-    
-    # param completions
-    for param in params:
-      completion = self._make_completion_from_variable_definition(param, file_name)
-      completions.append(completion)
-    
-    return completions
+    return [trigger, result]
   
-  def _extract_definitions_from_text(self, jai_text):
-    jai_text = self._strip_block_comments(jai_text)
-    jai_text = self._strip_line_comments(jai_text)
-    
-    defs = self.definition_pattern.findall(jai_text)
-    return list(set(defs))
-  
-  def _make_completions_from_proc_definition(self, definition, file_name):
-    match = self.proc_pattern.match(definition)
-    
-    if match == None:
-      return []
-    
-    groups = match.groups()
-    
-    proc_name = groups[0]
-    params_str = groups[1]
-    return_type = groups[2]
-    
-    params_list = self.proc_params_pattern.findall(params_str)
-    
-    # Handle the case of empty space inside parentheses
-    if len(params_list) == 1 and params_list[0].strip() == '':
-      params_list = []
-    
-    return self._make_completions_from_proc_components(proc_name, params_list, return_type, file_name)
-  
-  def _make_completion_from_variable_definition(self, definition, file_name):
-    colon_index = definition.find(':')
-    identifier = definition[:colon_index].strip()
-    return [identifier + '\t ' + file_name, identifier]
+  def _make_generic_completion(self, identifier, ui_file_name):
+    return [identifier + '\t ' + ui_file_name, identifier]
   
   def _get_file_contents(self, file_path, char_count=None):
     file_view = sublime.active_window().find_open_file(file_path)
@@ -141,4 +268,3 @@ class CompletionParser:
       return ''
     else:
       return view.substr(buffer_region)
-  
