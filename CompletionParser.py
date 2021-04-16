@@ -67,6 +67,7 @@ class CompletionParser:
       completions.append(self._make_generic_completion(identifier, ui_file_name))
     
     # Enforce a maximum width. rwtodo: don't know if this is a significant performance hit yet. Might be better to do this when each completion is created, to avoid the cost of iteration and indexing into the list.
+    # rwtodo: truncate the declaration from the right, leaving behind the filename, instead of truncating from the middle
     max_length = 90
     for c in range(len(completions)):
       if len(completions[c][0]) > 50:
@@ -78,7 +79,6 @@ class CompletionParser:
     return completions
   
   comma_pattern = re.compile(r',')
-  param_components_pattern = re.compile(r'(\$*?\w+)\s*:\s*(.+?)\s*$')
   def _split_params(self, params_string, masked_params_string):
     if len(params_string.strip()) == 0:
       return []
@@ -94,8 +94,7 @@ class CompletionParser:
     params.append(params_string[param_start_index:])
     
     def remove_param_whitespace(param):
-      match = self.param_components_pattern.search(param)
-      return match.group(1) + ': ' + match.group(2)
+      return param.strip()
       
     return list(map(remove_param_whitespace, params))
   
@@ -146,7 +145,6 @@ class CompletionParser:
     if not inside_string_literal: # If the file ends inside a string literal, we don't care.
       # Append the remaining piece
       pieces.append(text[piece_start_index:])
-      piece_start_index = i
     
     return ''.join(pieces)
   
@@ -226,6 +224,7 @@ class CompletionParser:
   def _remove_herestring_contents(self, text):
     return self.herestring_contents_pattern.sub('#string;', text)
   
+  brace_replacer_pattern = re.compile(r'([^\\])([{}])')
   def _make_proc_completion(self, proc_name, params, suffix, file_name):
     trigger = proc_name + '('
     result = proc_name + '('
@@ -234,9 +233,20 @@ class CompletionParser:
       if p > 0:
         trigger += ', '
         result += ', '
+      
+      param = params[p]
+      trigger += param
+      
+      while True:
+        match = self.brace_replacer_pattern.search(param)
         
-      trigger += params[p]
-      result += '${' + str(p+1) + ':' + params[p] + '}'
+        if not match:
+          break
+        
+        escaped_brace = match.group(1) + '\\' + match.group(2)
+        param = param[:match.start()] + escaped_brace + param[match.end():]
+        
+      result += '${' + str(p+1) + ':' + param + '}'
     
     trigger += ')'
     result += ')'
