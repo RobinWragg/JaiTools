@@ -171,7 +171,6 @@ to_c_string :: (s: string) -> *u8 {
 //                   ^ keyword.operator.assignment.jai
 //                     ^^^^^^^^^ storage.type.jai
 //                              ^ punctuation.section.parameters.end.jai
-  print("hello");
 }
 
 multi_line_func_0 :: (
