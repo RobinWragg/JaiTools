@@ -13,7 +13,7 @@ class CompletionParser:
   
   whitespace_pattern = re.compile(r'\s+')
   proc_decl_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\(\s*(?:\$*?\w+\s*:|\)).*?[{;]')
-  proc_decl_grouping_pattern = re.compile(r'(\w+)[\w\W]+?\(\s*(.+?)\s*\)\s*(->.+?)?\s*[#{;]')
+  proc_decl_grouping_pattern = re.compile(r'(\w+)[\w\W]+?\(\s*(.*?)\s*\)\s*(->.+?)?\s*[#{;]')
   def get_completions_from_text(self, text, ui_file_name):
     # NOTE: The order of these text manipulation functions is important.
     
@@ -98,7 +98,8 @@ class CompletionParser:
       
     return list(map(remove_param_whitespace, params))
   
-  brace_or_decl_pattern = re.compile(r'[{}]|([`$]*\w+)\s?:')
+  brace_or_decl_pattern = re.compile(r'{.*?(?=[{}])|}|([`$]*\w+)\s?:(?:\s?[:=]\s?(\w+))?')
+  # rwtodo: this can probably be optimised by using a different regex when block depth is > 0.
   def _get_declaration_identifiers(self, text):
     declarations = set()
     start_index = 0
@@ -112,7 +113,7 @@ class CompletionParser:
         
       match_str = match.group(0)
       
-      if match_str == '{':
+      if match_str[0] == '{':
         block_depth += 1
       elif match_str == '}':
         block_depth -= 1
@@ -120,6 +121,14 @@ class CompletionParser:
         identifier = match.group(1)
         declarations.add(identifier)
         # rwtodo: if the identifier is an enum, enum_flags or struct decl with a block, grab the members. Don't forget that struct members can be 'using', but it should 'just work' if you're looking for a colon prefix, unless you can do anonymous 'using's. Don't know.
+        after_identifier = match.group(2)
+        if after_identifier:
+          if after_identifier == 'struct':
+            pass
+          if after_identifier == 'enum':
+            pass
+          if after_identifier == 'enum_flags':
+            pass
         
       start_index = match.end()
     
