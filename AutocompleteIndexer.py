@@ -1,6 +1,7 @@
-from .AutocompleteParser import *
+import sublime
 import sublime_plugin
-import time
+import os
+from .autocomplete_parser import get_completions
 
 # rwtodo: Use module names instead of filenames for the UI name if the completion came from a module.
 # rwtodo: ensure a buffer and a file path of the same code can't exist in the cache. That would result in duplicated completions. Maybe just watch for the file save event and delete the buffer then.
@@ -9,15 +10,19 @@ import time
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
   completion_index = {} # rwtodo: rename to completion_cache, and rename index_key to cache_key etc
-  parser = AutocompleteParser()
   
-  def get_view_contents(self, view, char_count=None):
-    pattern = ''
+  def get_file_contents(self, file_path):
+    file_view = sublime.active_window().find_open_file(file_path)
     
-    if char_count == None:
-      pattern = '[\w\W]*'
+    # Load from the view buffer if it exists
+    if file_view == None:
+      with open(file_path, 'r', encoding='utf-8') as f:
+        return f.read()
     else:
-      pattern = '^[\w\W]{0,' + str(char_count) + '}'
+      return self.get_view_contents(file_view)
+      
+  def get_view_contents(self, view):
+    pattern = '[\w\W]*'
     
     buffer_region = view.find(pattern, 0)
     
@@ -66,15 +71,15 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     if isinstance(index_key, str):
       # index_key is a file path.
       ui_name = os.path.basename(index_key) # rwtodo: this should be the module name if the file is part of a standard module. Not sure about user modules.
-      completions = self.parser.get_completions_from_file(index_key, ui_name)
-      
+      text = self.get_file_contents(index_key)
+      completions = get_completions(text, ui_name)
     else:
       # index_key is a buffer ID (int). This means the Jai code only exists in an unsaved view.
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
       for view in sublime.active_window().views():
         if view.buffer_id() == index_key:
           jai_text = self.get_view_contents(view)
-          completions = self.parser.get_completions_from_text(jai_text, 'unsaved')
+          completions = get_completions(jai_text, 'unsaved')
           break
     
     return completions
@@ -92,9 +97,6 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
   
   def initialize_index(self):
     # Gather completions from all views.
-    
-    start_time = time.time()
-    
     new_completion_index = {}
     all_index_keys = self.get_all_index_keys()
     
@@ -105,8 +107,6 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
         new_completion_index[index_key] = completions
     
     self.completion_index = new_completion_index
-    
-    duration_ms = int((time.time() - start_time) * 1000)
   
   def on_post_save_async(self, view):
     if not self.view_is_jai(view):
