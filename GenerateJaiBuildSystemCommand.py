@@ -1,4 +1,3 @@
-from .Common import *
 import sublime
 import sublime_plugin
 import os
@@ -8,7 +7,7 @@ import os
 class GenerateJaiBuildSystemCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		pass
-		# rwtodo: ask for build command 'jai myfile.jai -args'
+		# rwtodo: ask for build command 'jai myfile.jai'
 
 
 

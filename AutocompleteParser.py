@@ -6,7 +6,7 @@ import re
 # rwtodo: Handle the 'using' keyword for params. just remove them?
 # rwtodo: Braces in completions break Sublime's completion engine. Hopefully I can just backslash them.
 
-class CompletionParser:
+class AutocompleteParser:
   def get_completions_from_file(self, path, ui_file_name):
     text = self._get_file_contents(path)
     return self.get_completions_from_text(text, ui_file_name)

@@ -1,5 +1,4 @@
-from .Common import *
-from .CompletionParser import *
+from .AutocompleteParser import *
 import sublime_plugin
 import time
 
@@ -10,14 +9,45 @@ import time
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
   completion_index = {} # rwtodo: rename to completion_cache, and rename index_key to cache_key etc
-  parser = CompletionParser()
+  parser = AutocompleteParser()
+  
+  def get_view_contents(self, view, char_count=None):
+    pattern = ''
+    
+    if char_count == None:
+      pattern = '[\w\W]*'
+    else:
+      pattern = '^[\w\W]{0,' + str(char_count) + '}'
+    
+    buffer_region = view.find(pattern, 0)
+    
+    if buffer_region == None:
+      return ''
+    else:
+      return view.substr(buffer_region)
+      
+  def view_is_jai(self, view):
+    settings = view.settings()
+    
+    if settings != None:
+      syntax = settings.get('syntax')
+      if syntax != None:
+        if syntax.find('Jai.sublime-syntax') >= 0:
+          return True
+
+    path = view.file_name()
+    
+    if path != None and path[-4:].lower() == '.jai':
+      return True
+      
+    return False
   
   def get_all_index_keys(self):
     index_keys = set()
     
     # Grab the index keys of all open jai views
     for view in sublime.active_window().views():
-      if view_is_jai(view):
+      if self.view_is_jai(view):
         index_keys.add(self.get_view_index_key(view))
     
     return index_keys
@@ -43,14 +73,14 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
       for view in sublime.active_window().views():
         if view.buffer_id() == index_key:
-          jai_text = get_view_contents(view)
+          jai_text = self.get_view_contents(view)
           completions = self.parser.get_completions_from_text(jai_text, 'unsaved')
           break
     
     return completions
   
   def index_view(self, view, is_async):
-    if not view_is_jai(view):
+    if not self.view_is_jai(view):
       return
     
     index_key = self.get_view_index_key(view)
@@ -79,7 +109,7 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     duration_ms = int((time.time() - start_time) * 1000)
   
   def on_post_save_async(self, view):
-    if not view_is_jai(view):
+    if not self.view_is_jai(view):
       return None
     
     # If the view's buffer ID is a key in the index, it needs to be replaced with the view's file path.
@@ -90,19 +120,19 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
     self.index_view(view, True)
   
   def on_activated_async(self, view):
-    if not view_is_jai(view):
+    if not self.view_is_jai(view):
       return None
     
     self.initialize_index()
   
   def on_deactivated_async(self, view):
-    if not view_is_jai(view):
+    if not self.view_is_jai(view):
       return None
       
     self.index_view(view, True)
   
   def on_query_completions(self, view, prefix, locations):
-    if not view_is_jai(view):
+    if not self.view_is_jai(view):
       return None
     
     self.index_view(view, False)
