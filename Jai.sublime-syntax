@@ -261,7 +261,7 @@ contexts:
   
   # Matches the start of a procedure declaration. This includes operator procedures.
   proc_declaration:
-    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*(?:#\w*|inline)?\s*\(\s*(?:{{name}}\s*:|//|\)|$))'
+    - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*(?:#\w*|inline)?\s*\(\s*(?:using)?\s*(?:{{name}}\s*:|//|\)|$))'
       scope: entity.name.function.jai
       push: proc_declaration_post_name
   
@@ -286,6 +286,8 @@ contexts:
     - include: comment
     - match: '\('
       scope: punctuation.section.parameters.begin.jai
+    - match: '\busing\b'
+      scope: keyword.other.jai
     - match: '({{name}})\s*(:)'
       captures:
         1: variable.parameter.jai
