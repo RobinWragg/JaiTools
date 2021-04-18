@@ -1,4 +1,3 @@
-import sublime
 import re
 
 # rwtodo: active file: all identifiers. all procs.
