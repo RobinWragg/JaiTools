@@ -10,13 +10,13 @@ def get_completions_from_file(path, ui_file_name):
   return get_completions(text, ui_file_name)
 
 whitespace_pattern = re.compile(r'\s+')
-proc_decl_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\(\s*(?:\$*?\w+\s*:|\)).*?[{;]')
-proc_decl_grouping_pattern = re.compile(r'(\w+)[\w\W]+?\(\s*(.*?)\s*\)\s*(->.+?)?\s*[#{;]')
+proc_decl_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\(\s*(?:\$*\w+\s*:|\)).*?[{;]')
+proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s*(.*?)\s*\)\s*(->.+?)?\s*[#{;]')
 def get_completions(text, ui_file_name):
   # NOTE: The order of these text manipulation functions is important.
   
-  text = _remove_herestring_contents(text)
   text = _remove_comments(text)
+  text = _remove_herestring_contents(text)
   
   # rwtodo: this is just for non-active files
   text = _remove_file_scopes(text)
@@ -47,7 +47,7 @@ def get_completions(text, ui_file_name):
       
       params = _split_params(params_string, masked_params_string)
       
-      suffix = decl[grouped_match.start(3):grouped_match.end(3)].strip()
+      suffix = ' ' + decl[grouped_match.start(3):grouped_match.end(3)].strip()
       
       if len(suffix) == 0:
         suffix = None
@@ -66,9 +66,9 @@ def get_completions(text, ui_file_name):
   
   # Enforce a maximum width. rwtodo: don't know if this is a significant performance hit yet. Might be better to do this when each completion is created, to avoid the cost of iteration and indexing into the list.
   # rwtodo: truncate the declaration from the right, leaving behind the filename, instead of truncating from the middle
-  max_length = 90
+  max_length = 100
   for c in range(len(completions)):
-    if len(completions[c][0]) > 50:
+    if len(completions[c][0]) > max_length:
       list_entry = completions[c][0]
       prefix_length = max_length // 2
       suffix_length = max_length // 2 - 3
@@ -96,7 +96,7 @@ def _split_params(params_string, masked_params_string):
     
   return list(map(remove_param_whitespace, params))
 
-brace_or_decl_pattern = re.compile(r'{.*?(?=[{}])|}|([`$]*\w+)\s?:(?:\s?[:=]\s?(\w+))?')
+brace_or_decl_pattern = re.compile(r'{.*?(?=[{}])|}|(\$*\w+)\s?:(?:\s?[:=]\s?(\w+))?')
 # rwtodo: this can probably be optimised by using a different regex when block depth is > 0.
 def _get_declaration_identifiers(text):
   declarations = set()
