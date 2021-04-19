@@ -7,7 +7,7 @@ import re
 sys.path.append('..')
 from autocomplete_parser import *
 
-jai_file_path = os.path.expanduser('~/Downloads/jai-beta-053/modules/Sound_Player/module.jai')
+jai_file_path = os.path.expanduser('Windows.jai')
 
 with open(jai_file_path, 'r') as f:
   jai_text = f.read()
@@ -32,3 +32,6 @@ cProfile.run('get_completions_repeatedly()', sort='cumtime')
 # for d in parser_declarations[:10]:
 #   print(d)
 
+# completions = get_completions(jai_text, jai_file_basename)
+# for completion in completions:
+#     print(completion[0])

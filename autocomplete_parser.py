@@ -4,6 +4,7 @@ import re
 # rwtodo: inactive files: all declarations in module/export scope.
 # rwtodo: Handle the 'using' keyword for params. just remove them?
 # rwtodo: Braces in completions break Sublime's completion engine. Hopefully I can just backslash them.
+# rwtodo: active files should give completions for procs and all words longer than 3 chars.
 
 def get_completions_from_file(path, ui_file_name):
   text = _get_file_contents(path)
@@ -66,6 +67,7 @@ def get_completions(text, ui_file_name):
   
   # Enforce a maximum width. rwtodo: don't know if this is a significant performance hit yet. Might be better to do this when each completion is created, to avoid the cost of iteration and indexing into the list.
   # rwtodo: truncate the declaration from the right, leaving behind the filename, instead of truncating from the middle
+  # rwtodo: can the max width be set based on the width of the window?
   max_length = 100
   for c in range(len(completions)):
     if len(completions[c][0]) > max_length:
@@ -102,6 +104,9 @@ def _get_declaration_identifiers(text):
   declarations = set()
   start_index = 0
   block_depth = 0
+  
+  # This removes params so they aren't added to the declarations list. It's also a speed improvement.
+  text = _remove_parenthesis(text)
   
   while True:
     match = brace_or_decl_pattern.search(text, pos=start_index)
@@ -189,7 +194,6 @@ def _mask_struct_literals(text):
 
 parentheses_pattern = re.compile(r'\([^(]*?\)')
 def _mask_parentheses(text):
-  # Keep overwriting all occurrences of literals that don't contain nested literals until none are left.
   text_changed = True
   
   while text_changed:
@@ -207,6 +211,31 @@ def _mask_parentheses(text):
       piece_end_index = match.end()
       pieces.append('"' * (piece_end_index - piece_start_index))
       piece_start_index = piece_end_index
+    
+    # Append the last piece
+    pieces.append(text[piece_start_index:])
+    
+    modified_text = ''.join(pieces)
+    
+    if modified_text != text:
+      text_changed = True
+      text = modified_text
+  
+  return text
+
+def _remove_parenthesis(text):
+  text_changed = True
+  
+  while text_changed:
+    text_changed = False
+    
+    matches = parentheses_pattern.finditer(text)
+    pieces = []
+    piece_start_index = 0
+    
+    for match in matches:
+      pieces.append(text[piece_start_index:match.start()])
+      piece_start_index = match.end()
     
     # Append the last piece
     pieces.append(text[piece_start_index:])
