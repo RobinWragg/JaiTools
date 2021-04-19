@@ -10,8 +10,8 @@ def get_completions_from_file(path, ui_file_name):
   return get_completions(text, ui_file_name)
 
 whitespace_pattern = re.compile(r'\s+')
-proc_decl_pattern = re.compile(r'\b\w+\s*:\s*[:=]\s*\(\s*(?:\$*\w+\s*:|\)).*?[{;]')
-proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s*(.*?)\s*\)\s*(->.+?)?\s*[#{;]')
+proc_decl_pattern = re.compile(r'\b\w+\s?:\s?[:=]\s?\(\s?(?:using\s?)?(?:\$*\w+\s?:|\)).*?[{;]')
+proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s?(.*?)\s?\)\s?(->.+?)?\s?[#{;]')
 def get_completions(text, ui_file_name):
   # NOTE: The order of these text manipulation functions is important.
   
