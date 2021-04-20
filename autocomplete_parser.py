@@ -1,9 +1,5 @@
 import re
 
-# rwtodo: active file: all identifiers. all procs.
-# rwtodo: inactive files: all declarations in module/export scope.
-# rwtodo: Handle the 'using' keyword for params. just remove them?
-# rwtodo: Braces in completions break Sublime's completion engine. Hopefully I can just backslash them.
 # rwtodo: active files should give completions for procs and all words longer than 3 chars.
 
 def get_completions_from_file(path, ui_file_name):
@@ -57,8 +53,7 @@ def get_completions(text, ui_file_name):
     else:
       print('JaiTools: Failed to deconstruct procedure: ' + match.group(0))
   
-  # rwtodo: don't filter out nested decls for the active file. Create _get_all_words()?
-  # rwtodo: don't collect param identifiers for non-active files.
+  # rwtodo: don't filter out nested decls for active files. Create _get_all_words()?
   identifiers = _get_declaration_identifiers(masked_text)
   identifiers -= proc_identifiers
   
@@ -116,6 +111,7 @@ def _get_declaration_identifiers(text):
       after_identifier = match.group(2)
       if after_identifier:
         if after_identifier == 'struct':
+          # rwtodo: remember that structs can nest.
           pass
         if after_identifier == 'enum':
           pass
