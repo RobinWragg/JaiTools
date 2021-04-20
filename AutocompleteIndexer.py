@@ -79,7 +79,7 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       for view in sublime.active_window().views():
         if view.buffer_id() == index_key:
           jai_text = self.get_view_contents(view)
-          completions = get_completions(jai_text, 'unsaved')
+          completions = get_completions(jai_text, '(unsaved)')
           break
     
     return completions

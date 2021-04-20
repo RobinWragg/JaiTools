@@ -65,17 +65,6 @@ def get_completions(text, ui_file_name):
   for identifier in identifiers:
     completions.append(_make_generic_completion(identifier, ui_file_name))
   
-  # Enforce a maximum width. rwtodo: don't know if this is a significant performance hit yet. Might be better to do this when each completion is created, to avoid the cost of iteration and indexing into the list.
-  # rwtodo: truncate the declaration from the right, leaving behind the filename, instead of truncating from the middle
-  # rwtodo: can the max width be set based on the width of the window?
-  max_length = 100
-  for c in range(len(completions)):
-    if len(completions[c][0]) > max_length:
-      list_entry = completions[c][0]
-      prefix_length = max_length // 2
-      suffix_length = max_length // 2 - 3
-      completions[c][0] = list_entry[:prefix_length] + '...' + list_entry[-suffix_length:]
-  
   return completions
 
 comma_pattern = re.compile(r',')
@@ -262,6 +251,8 @@ def _remove_herestring_contents(text):
 
 brace_replacer_pattern = re.compile(r'([^\\])([{}])')
 def _make_proc_completion(proc_name, params, suffix, file_name):
+  max_length = 100 # rwtodo: Make this a user setting, or preferably dynamic to the size of the window.
+  
   trigger = proc_name + '('
   result = proc_name + '('
   
@@ -290,7 +281,15 @@ def _make_proc_completion(proc_name, params, suffix, file_name):
   if suffix:
     trigger += suffix
   
-  trigger += '\t ' + file_name
+  file_name = '\t' + file_name
+  
+  full_length = len(trigger) + len(file_name)
+  
+  if full_length > max_length:
+    length_to_remove = full_length - max_length + 3 # +3 for ellipsis
+    trigger = trigger[:-length_to_remove] + '...'
+  
+  trigger += file_name
   
   return [trigger, result]
 
