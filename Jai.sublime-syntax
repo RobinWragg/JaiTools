@@ -101,7 +101,7 @@ contexts:
   preprocessor_statement:
     - match: '#import|#load'
       scope: keyword.control.import.jai
-    - match: '#\w*\b'
+    - match: '#\w*'
       scope: meta.preprocessor.jai
   
   keyword:
@@ -142,7 +142,7 @@ contexts:
       push:
         - meta_scope: meta.variable.jai
         # Anonymous structs and enums
-        - match: '(:)\s*(struct|enum\s+{{name}})\s*(?=\{)'
+        - match: '(:)\s*(struct|(?:enum|enum_flags)\s+{{name}})\s*(?=\{)'
           captures:
             1: keyword.operator.assignment.jai
             2: storage.type.jai
@@ -159,31 +159,12 @@ contexts:
         - match: '\s*#string'
           scope: meta.preprocessor.jai
           pop: true
-        - match: '\bstruct\b'
-          scope: storage.type.jai
-          push: struct_configuration
-        - match: '\b(?:enum|enum_flags)\b'
-          scope: storage.type.jai
-          push: enum_configuration
         - match: '(?=\s*{)'
           pop: true
         - match: ';'
           scope: punctuation.terminator.jai
           pop: true
         - include: main
-  
-  struct_configuration:
-    - match: '(?=\()'
-      push: parameter_list
-    - match: '(?=\s*{)'
-      pop: true
-    - include: preprocessor_statement
-  
-  enum_configuration:
-    - match: '(?=\s*{)'
-      pop: true
-    - include: builtin_type
-    - include: preprocessor_statement
   
   builtin_type:
     - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64|struct|enum)\b'
@@ -275,11 +256,11 @@ contexts:
     - include: assignment_operator
     - match: '\binline\b'
       scope: keyword.other.jai
-    - match: '#\w*\b'
+    - match: '#\w*'
       scope: meta.preprocessor.jai
     - match: '(?=\()'
       push: parameter_list
-    - match: '\s*(?={|;|#\w+)'
+    - match: '\s*(?={|;|#\w*)'
       pop: true
   
   parameter_list: # This is for procedures and structs.
@@ -322,11 +303,11 @@ contexts:
       scope: keyword.operator.assignment.jai
       push:
         - include: constant_expression
-        - match: '\s*(?=,|{|,|#\w+)'
+        - match: '\s*(?=,|{|,|#\w*)'
           pop: true
     - match: ','
       scope: punctuation.separator.jai
-    - match: '\s*(?={|;|#\w+)'
+    - match: '\s*(?={|;|#\w*)'
       pop: true
 
 

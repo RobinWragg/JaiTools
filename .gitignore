@@ -2,3 +2,4 @@
 nocommit*
 *.sublime-project
 *.sublime-workspace
+__pycache__
