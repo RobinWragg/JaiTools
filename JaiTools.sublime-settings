@@ -1,0 +1,4 @@
+{
+    // The maximum width of the completions popup. Requires a restart.
+    "completions_popup_max_width": 1000
+}

@@ -10,6 +10,7 @@ from .autocomplete_parser import get_completions
 
 class AutocompleteIndexer(sublime_plugin.EventListener):
   completion_index = {} # rwtodo: rename to completion_cache, and rename index_key to cache_key etc
+  max_trigger_length = -1
   
   def get_file_contents(self, file_path):
     file_view = sublime.active_window().find_open_file(file_path)
@@ -66,20 +67,25 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       return file_path
   
   def get_completions_from_index_key(self, index_key):
+    if self.max_trigger_length == -1:
+      # rwtodo: add a menu option to open JaiTools.sublime-settings the same way Package Control does it.
+      settings = sublime.load_settings('JaiTools.sublime-settings')
+      self.max_trigger_length = settings.get('completions_popup_max_width', 1000)
+    
     completions = None
     
     if isinstance(index_key, str):
       # index_key is a file path.
       ui_name = os.path.basename(index_key) # rwtodo: this should be the module name if the file is part of a standard module. Not sure about user modules.
       text = self.get_file_contents(index_key)
-      completions = get_completions(text, ui_name)
+      completions = get_completions(text, ui_name, self.max_trigger_length)
     else:
       # index_key is a buffer ID (int). This means the Jai code only exists in an unsaved view.
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
       for view in sublime.active_window().views():
         if view.buffer_id() == index_key:
           jai_text = self.get_view_contents(view)
-          completions = get_completions(jai_text, '(unsaved)')
+          completions = get_completions(jai_text, '(unsaved)', self.max_trigger_length)
           break
     
     return completions

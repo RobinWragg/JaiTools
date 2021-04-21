@@ -9,7 +9,7 @@ def get_completions_from_file(path, ui_file_name):
 whitespace_pattern = re.compile(r'\s+')
 proc_decl_pattern = re.compile(r'\b\w+\s?:\s?[:=]\s?\(\s?(?:using\s?)?(?:\$*\w+\s?:|\)).*?[{;]')
 proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s?(.*?)\s?\)\s?(->.+?)?\s?[#{;]')
-def get_completions(text, ui_file_name):
+def get_completions(text, ui_file_name, max_proc_length):
   # NOTE: The order of these text manipulation functions is important.
   
   text = _remove_comments(text)
@@ -49,7 +49,7 @@ def get_completions(text, ui_file_name):
       if len(suffix) == 0:
         suffix = None
       
-      completions.append(_make_proc_completion(identifier, params, suffix, ui_file_name))
+      completions.append(_make_proc_completion(identifier, params, suffix, ui_file_name, max_proc_length))
     else:
       print('JaiTools: Failed to deconstruct procedure: ' + match.group(0))
   
@@ -82,12 +82,12 @@ def _split_params(params_string, masked_params_string):
     
   return list(map(remove_param_whitespace, params))
 
-brace_or_decl_pattern = re.compile(r'{.*?(?=[{}])|}|(\$*\w+)\s?:(?:\s?[:=]\s?(\w+))?')
-# rwtodo: this can probably be optimised by using a different regex when block depth is > 0.
+brace_or_decl_pattern = re.compile(r'{|}|(\$*\w+)\s?:(?:\s?[:=]?\s?(struct|enum|enum_flags)\b)?')
 def _get_declaration_identifiers(text):
   declarations = set()
   start_index = 0
   block_depth = 0
+  valid_block_depth = 0
   
   # This removes params so they aren't added to the declarations list. It's also a speed improvement.
   text = _remove_parenthesis(text)
@@ -104,19 +104,18 @@ def _get_declaration_identifiers(text):
       block_depth += 1
     elif match_str == '}':
       block_depth -= 1
-    elif block_depth == 0:
+      
+      if valid_block_depth > block_depth:
+        valid_block_depth = block_depth
+        
+    elif block_depth == valid_block_depth:
       identifier = match.group(1)
       declarations.add(identifier)
-      # rwtodo: if the identifier is an enum, enum_flags or struct decl with a block, grab the members. Don't forget that struct members can be 'using', but it should 'just work' if you're looking for a colon prefix, unless you can do anonymous 'using's. Don't know.
-      after_identifier = match.group(2)
-      if after_identifier:
-        if after_identifier == 'struct':
-          # rwtodo: remember that structs can nest.
-          pass
-        if after_identifier == 'enum':
-          pass
-        if after_identifier == 'enum_flags':
-          pass
+      
+      valid_declaration_block_prefix = match.group(2)
+      
+      if valid_declaration_block_prefix:
+        valid_block_depth += 1
       
     start_index = match.end()
   
@@ -246,9 +245,7 @@ def _remove_herestring_contents(text):
   return herestring_contents_pattern.sub('#string;', text)
 
 brace_replacer_pattern = re.compile(r'([^\\])([{}])')
-def _make_proc_completion(proc_name, params, suffix, file_name):
-  max_length = 100 # rwtodo: Make this a user setting, or preferably dynamic to the size of the window.
-  
+def _make_proc_completion(proc_name, params, suffix, file_name, max_length):  
   trigger = proc_name + '('
   result = proc_name + '('
   
