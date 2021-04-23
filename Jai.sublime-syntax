@@ -41,11 +41,11 @@ contexts:
     - include: keyword
     - include: non_assignment_operator
     - include: assignment_operator
-    - match: '(?<=\w|\)|\s)(\.)({{name}})\b' # NOTE: Must have priority over numerical constants.
-      captures:
-        1: punctuation.accessor.jai
-        2: variable.other.jai
+    - match: '(?<=\w|\)|\s)\.(?={{name}})'
+      scope: punctuation.accessor.jai
     - include: procedure_call
+    - match: '{{name}}'
+      scope: variable.other.jai
   
   procedure_call:
     - match: '{{name}},{{name}}(?=\()'
