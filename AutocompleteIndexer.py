@@ -78,14 +78,14 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
       # index_key is a file path.
       ui_name = os.path.basename(index_key) # rwtodo: this should be the module name if the file is part of a standard module. Not sure about user modules.
       text = self.get_file_contents(index_key)
-      completions = get_completions(text, ui_name, self.max_trigger_length)
+      completions = get_completions(text, ui_name, False, self.max_trigger_length)
     else:
       # index_key is a buffer ID (int). This means the Jai code only exists in an unsaved view.
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
       for view in sublime.active_window().views():
         if view.buffer_id() == index_key:
           jai_text = self.get_view_contents(view)
-          completions = get_completions(jai_text, '(unsaved)', self.max_trigger_length)
+          completions = get_completions(jai_text, '(unsaved)', False, self.max_trigger_length)
           break
     
     return completions
@@ -127,13 +127,13 @@ class AutocompleteIndexer(sublime_plugin.EventListener):
   
   def on_activated_async(self, view):
     if not self.view_is_jai(view):
-      return None
+      return
     
     self.initialize_index()
   
   def on_deactivated_async(self, view):
     if not self.view_is_jai(view):
-      return None
+      return
       
     self.index_view(view, True)
   

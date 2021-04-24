@@ -1,6 +1,7 @@
 import re
 
 # rwtodo: active files should give completions for procs and all words longer than 3 chars.
+# rwtodo: untested with polymorphic structs!
 
 def get_completions_from_file(path, ui_file_name):
   text = _get_file_contents(path)
@@ -9,7 +10,7 @@ def get_completions_from_file(path, ui_file_name):
 whitespace_pattern = re.compile(r'\s+')
 proc_decl_pattern = re.compile(r'\b\w+\s?:\s?[:=]\s?\(\s?(?:using\s?)?(?:\$*\w+\s?:|\)).*?[{;]')
 proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s?(.*?)\s?\)\s?(->.+?)?\s?[#{;]')
-def get_completions(text, ui_file_name, max_proc_length):
+def get_completions(text, ui_file_name, is_active_file, max_proc_length):
   # NOTE: The order of these text manipulation functions is important.
   
   text = _remove_comments(text)
@@ -61,6 +62,11 @@ def get_completions(text, ui_file_name, max_proc_length):
     completions.append(_make_generic_completion(identifier, ui_file_name))
   
   return completions
+
+# rwtodo: use this.
+all_words_pattern = re.compile(r'`?\w{4,}')
+def _get_all_words(self, text):
+  return self.all_words_pattern.findall(text)
 
 comma_pattern = re.compile(r',')
 def _split_params(params_string, masked_params_string):
