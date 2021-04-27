@@ -280,7 +280,7 @@ def _make_proc_completion(proc_name, params, suffix, file_name, max_length):
   if suffix:
     trigger += suffix
   
-  file_name = '\t' + file_name
+  file_name = '\t ' + file_name
   
   full_length = len(trigger) + len(file_name)
   
