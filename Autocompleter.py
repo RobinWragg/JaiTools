@@ -66,6 +66,12 @@ class Autocompleter(sublime_plugin.EventListener):
     else:
       return file_path
   
+  def get_view_by_buffer_id(self, buffer_id):
+    for view in sublime.active_window().views():
+      if view.buffer_id() == buffer_id:
+        return view
+    return None
+  
   def get_completions_from_cache_key(self, cache_key):
     if self.max_trigger_length == -1:
       # rwtodo: add a menu option to open JaiTools.sublime-settings the same way Package Control does it.
@@ -82,11 +88,10 @@ class Autocompleter(sublime_plugin.EventListener):
     else:
       # cache_key is a buffer ID (int). This means the Jai code only exists in an unsaved view.
       # The API can't get text from the buffer directly, so find a view associated with it (if any).
-      for view in sublime.active_window().views():
-        if view.buffer_id() == cache_key:
-          jai_text = self.get_view_contents(view)
-          completions = get_completions(jai_text, '(unsaved)', False, self.max_trigger_length)
-          break
+      view = self.get_view_by_buffer_id(cache_key)
+      if view:
+        jai_text = self.get_view_contents(view)
+        completions = get_completions(jai_text, '(unsaved)', False, self.max_trigger_length)
     
     return completions
   
@@ -129,7 +134,7 @@ class Autocompleter(sublime_plugin.EventListener):
     if not self.view_is_jai(view):
       return
     
-    self.initialize_cache()
+    self.initialize_cache() # rwtodo: this call is wrong
   
   def on_deactivated_async(self, view):
     if not self.view_is_jai(view):
@@ -143,11 +148,31 @@ class Autocompleter(sublime_plugin.EventListener):
     
     # rwtodo: filter out identifiers that don't contain 'prefix'. Design the cache to make this fast.
     
-    self.get_completions_from_view(view)
+    active_view_key = self.get_view_cache_key(view)
     
+    # Delete completions from the cache if the view isn't open anymore
+    keys_to_delete = []
+    for key in self.completion_cache.keys():
+      if isinstance(key, str):
+        if view.window().find_open_file(key) == None:
+          keys_to_delete.append(key)
+      else:
+        if self.get_view_by_buffer_id(key) == None:
+          keys_to_delete.append(key)
+    for key in keys_to_delete:
+      del self.completion_cache[key]
+    
+    # Gather completions into one list
     completions = []
     for key in self.completion_cache.keys():
+      # rwtodo: skip the key if it represents a non-primary view into the file/buffer.
+      if key == active_view_key:
+        continue
       completions += self.completion_cache[key]
+    
+    # Add the active view's completions to the completions list
+    jai_text = self.get_view_contents(view)
+    completions += get_completions(jai_text, 'rwtodo', True, self.max_trigger_length)
     
     return completions
 
