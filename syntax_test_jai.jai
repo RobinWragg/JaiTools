@@ -378,6 +378,18 @@ main :: () {
 //              ^^^^^^^^^^^^^^^^^ meta.function-call.jai
 //                                         ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
+
+  x_tris :: Vector3.[
+//          ^^^^^^^ storage.type.jai
+    Vector3.{1.0, 0.0, 0.0}, Vector3.{}, Vector3.{0.0, 0.1, 0.0}, Vector3.{1.0, 0.0, 0.0}, Vector3.{}, Vector3.{0.0, 0.0, 0.1}
+  ];
+}
+
+platform_clear : (colorrr: v3) -> () : clear;
+
+render_submit :: (sub: Submission, matrix := matrix4_identity()) {
+  master_matrix := get_master_matrix();
+  submit(sub, master_matrix);
 }
 
 #run main();
