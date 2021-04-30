@@ -3,13 +3,9 @@ import sublime_plugin
 import os
 from .autocomplete_parser import get_completions
 
-# rwtodo: Use module names instead of filenames for the UI name if the completion came from a module.
-# rwtodo: ensure a buffer and a file path of the same code can't exist in the cache. That would result in duplicated completions. Maybe just watch for the file save event and delete the buffer then.
-# rwtodo: it appears that files that are open but not located in one of the project folders are not parsed. When this is fixed, ensure that files which are not included in the project folders are removed from the cache when they are closed.
-# rwtodo: Sublime Text doesn't resize the completions popup correctly if we give it too many completions. Gather completions from all open files, and the files/modules referenced by all #import and #load statements in the active file. Remove completions from the list if they don't contain the prefix given by on_query_completions.
-
 class Autocompleter(sublime_plugin.EventListener):
-  completion_cache = {} # rwtodo: rename to completion_cache, and rename cache_key to cache_key etc
+  completion_cache = {}
+  cache_initialized = False
   max_trigger_length = -1
   
   def get_file_contents(self, file_path):
@@ -82,7 +78,7 @@ class Autocompleter(sublime_plugin.EventListener):
     
     if isinstance(cache_key, str):
       # cache_key is a file path.
-      ui_name = os.path.basename(cache_key) # rwtodo: this should be the module name if the file is part of a standard module. Not sure about user modules.
+      ui_name = os.path.basename(cache_key)
       text = self.get_file_contents(cache_key)
       completions = get_completions(text, ui_name, False, self.max_trigger_length)
     else:
@@ -118,6 +114,7 @@ class Autocompleter(sublime_plugin.EventListener):
         new_completion_cache[cache_key] = completions
     
     self.completion_cache = new_completion_cache
+    self.cache_initialized = True
   
   def on_post_save_async(self, view):
     if not self.view_is_jai(view):
@@ -134,19 +131,18 @@ class Autocompleter(sublime_plugin.EventListener):
     if not self.view_is_jai(view):
       return
     
-    self.initialize_cache() # rwtodo: this call is wrong
+    if not self.cache_initialized:
+      self.initialize_cache()
   
   def on_deactivated_async(self, view):
     if not self.view_is_jai(view):
       return
-      
+    
     self.get_completions_from_view(view)
   
   def on_query_completions(self, view, prefix, locations):
     if not self.view_is_jai(view):
       return None
-    
-    # rwtodo: filter out identifiers that don't contain 'prefix'. Design the cache to make this fast.
     
     active_view_key = self.get_view_cache_key(view)
     
@@ -165,7 +161,6 @@ class Autocompleter(sublime_plugin.EventListener):
     # Gather completions into one list
     completions = []
     for key in self.completion_cache.keys():
-      # rwtodo: skip the key if it represents a non-primary view into the file/buffer.
       if key == active_view_key:
         continue
       completions += self.completion_cache[key]
@@ -173,6 +168,8 @@ class Autocompleter(sublime_plugin.EventListener):
     # Add the active view's completions to the completions list
     jai_text = self.get_view_contents(view)
     completions += get_completions(jai_text, 'rwtodo', True, self.max_trigger_length)
+    
+    # rwtodo: filter out identifiers that don't contain 'prefix'. Design the cache to make this fast.
     
     return completions
 
