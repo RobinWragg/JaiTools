@@ -305,8 +305,24 @@ a_mathy_procedure :: (m: Matrix4, v: Vector3) {
   compiler_destroy_workspace :: (w: Workspace) #compiler;
 //^^^^^^^^^^^^^^^^^^^^^^^^^^ entity.name.function.jai
 
-proc :: inline () {
+  proc_inline :: inline () {
+//^^^^^^^^^^^ entity.name.function.jai
+//            ^^ keyword.operator.assignment.jai
+//               ^^^^^^ keyword.other.jai
+  f := ifx value then "true" else "false";
+//     ^^^ keyword.control.jai
+//               ^^^^ keyword.control.jai
+//                    ^^^^^^ string.quoted.double.jai
+//                           ^^^^ keyword.control.jai
+//                                ^^^^^^^ string.quoted.double.jai
+
   write_string(ifx value then "true" else "false");
+//^^^^^^^^^^^^ meta.function-call.jai
+//             ^^^ keyword.control.jai
+//                       ^^^^ keyword.control.jai
+//                            ^^^^^^ string.quoted.double.jai
+//                                   ^^^^ keyword.control.jai
+//                                        ^^^^^^^ string.quoted.double.jai
 }
 
   proc_no_params :: (   ) {
@@ -315,9 +331,23 @@ proc :: inline () {
 //                  ^ punctuation.section.parameters.begin.jai
 //                      ^ punctuation.section.parameters.end.jai
   }
+
+  info_flags : enum_flags u32 { // defaults to 0, which means none of the choices below.
+//^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
+//                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.line.jai
+      POLYMORPH_MATCH       :: 0x1;
+//        ^^^^^^^^^^^^^^^ variable.other.jai
+                               ^^^ constant.numeric.jai
+      POLYMORPH_DEDUPLICATE :: 0x2;
+      AUTO_VALUE_BAKE       :: 0x4;
+  }
   
+  Another_Struct : struct { // defaults to 0, which means none of the choices below.
+//^^^^^^^^^^^^^^ meta.variable.jai
+//                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.line.jai
   
-  
+  }
+
 main :: () {
   build_options := get_build_options();
   build_options.output_type = .NO_OUTPUT;
@@ -348,6 +378,18 @@ main :: () {
 //              ^^^^^^^^^^^^^^^^^ meta.function-call.jai
 //                                         ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
+
+  x_tris :: Vector3.[
+//          ^^^^^^^ storage.type.jai
+    Vector3.{1.0, 0.0, 0.0}, Vector3.{}, Vector3.{0.0, 0.1, 0.0}, Vector3.{1.0, 0.0, 0.0}, Vector3.{}, Vector3.{0.0, 0.0, 0.1}
+  ];
+}
+
+platform_clear : (colorrr: v3) -> () : clear;
+
+render_submit :: (sub: Submission, matrix := matrix4_identity()) {
+  master_matrix := get_master_matrix();
+  submit(sub, master_matrix);
 }
 
 #run main();
