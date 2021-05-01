@@ -1,6 +1,5 @@
 import re
 
-# rwtodo: active files should give completions for procs and all words longer than 3 chars.
 # rwtodo: untested with polymorphic structs!
 
 def get_completions_from_file(path, ui_file_name):
@@ -13,11 +12,15 @@ proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s?(.*?)\s?\)\s?(->.+?)?\s?[
 def get_completions(text, ui_file_name, is_active_file, max_proc_length):
   # NOTE: The order of these text manipulation functions is important.
   
+  all_words = set()
+  if is_active_file:
+    all_words = _get_all_words(text)
+  
   text = _remove_comments(text)
   text = _remove_herestring_contents(text)
   
-  # rwtodo: this is just for non-active files
-  text = _remove_file_scopes(text)
+  if not is_active_file:
+    text = _remove_file_scopes(text)
   
   # Remove excessive whitespace
   text = whitespace_pattern.sub(' ', text)
@@ -54,7 +57,14 @@ def get_completions(text, ui_file_name, is_active_file, max_proc_length):
     else:
       print('JaiTools: Failed to deconstruct procedure: ' + match.group(0))
   
-  # rwtodo: don't filter out nested decls for active files. Create _get_all_words()?
+  if is_active_file:
+    all_words -= proc_identifiers
+    
+    for word in all_words:
+      completions.append(_make_generic_completion(word, ui_file_name))
+    
+    return completions
+  
   identifiers = _get_declaration_identifiers(masked_text)
   identifiers -= proc_identifiers
   
@@ -63,10 +73,9 @@ def get_completions(text, ui_file_name, is_active_file, max_proc_length):
   
   return completions
 
-# rwtodo: use this.
 all_words_pattern = re.compile(r'`?\w{4,}')
-def _get_all_words(self, text):
-  return self.all_words_pattern.findall(text)
+def _get_all_words(text):
+  return set(all_words_pattern.findall(text))
 
 comma_pattern = re.compile(r',')
 def _split_params(params_string, masked_params_string):
@@ -242,7 +251,7 @@ comment_pattern = re.compile(r'//.*?(?=\n)|\/\*[\w\W]*?\*\/')
 def _remove_comments(text):
   return comment_pattern.sub('', text)
 
-file_scope_pattern = re.compile(r'(?<=\n)\s*?#scope_file[\w\W]*?(?=#scope_)')
+file_scope_pattern = re.compile(r'(?<=\n)\s*?#scope_file[\w\W]*?(?=$|#scope_)')
 def _remove_file_scopes(text):
   return file_scope_pattern.sub('', text)
 
