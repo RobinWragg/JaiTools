@@ -9,12 +9,12 @@ def get_completions_from_file(path, ui_file_name):
 whitespace_pattern = re.compile(r'\s+')
 proc_decl_pattern = re.compile(r'\b\w+\s?:\s?[:=]\s?\(\s?(?:using\s?)?(?:\$*\w+\s?:|\)).*?[{;]')
 proc_decl_grouping_pattern = re.compile(r'(\w+).+?\(\s?(.*?)\s?\)\s?(->.+?)?\s?[#{;]')
-def get_completions(text, ui_file_name, is_active_file, max_proc_length):
+def get_completions(text, ui_file_name, is_active_file, max_proc_length, current_line=None):
   # NOTE: The order of these text manipulation functions is important.
   
   all_words = set()
   if is_active_file:
-    all_words = _get_all_words(text)
+    all_words = _get_all_words(text, current_line)
   
   text = _remove_comments(text)
   text = _remove_herestring_contents(text)
@@ -74,8 +74,11 @@ def get_completions(text, ui_file_name, is_active_file, max_proc_length):
   return completions
 
 all_words_pattern = re.compile(r'`?\w{4,}')
-def _get_all_words(text):
-  return set(all_words_pattern.findall(text))
+def _get_all_words(text, ignore_line):
+  lines = text.split('\n')
+  del lines[ignore_line]
+  text_without_line = ' '.join(lines)
+  return set(all_words_pattern.findall(text_without_line))
 
 comma_pattern = re.compile(r',')
 def _split_params(params_string, masked_params_string):

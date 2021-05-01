@@ -146,6 +146,14 @@ class Autocompleter(sublime_plugin.EventListener):
     
     self.get_completions_from_view(view)
   
+  def get_current_line(self, view):
+    try:
+      cursor_pos = view.sel()[0].a
+      return view.rowcol(cursor_pos)[0]
+    except Exception:
+      pass
+    return None
+  
   def on_query_completions(self, view, prefix, locations):
     if not self.view_is_jai(view):
       return None
@@ -174,12 +182,13 @@ class Autocompleter(sublime_plugin.EventListener):
     # Add the active view's completions to the completions list
     jai_text = self.get_view_contents(view)
     ui_name = self.get_ui_name_for_key(active_view_key)
-    completions += get_completions(jai_text, ui_name, True, self.max_trigger_length)
+    current_line = self.get_current_line(view)
+    completions += get_completions(jai_text, ui_name, True, self.max_trigger_length, current_line)
     
     # Filter out identifiers that don't contain 'prefix'. This helps Sublime Text sort them.
     completions = list(filter(lambda c: prefix in c[0], completions))
     
-    return completions
+    return (completions, sublime.INHIBIT_WORD_COMPLETIONS)
 
 
 
