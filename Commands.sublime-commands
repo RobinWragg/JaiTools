@@ -1,6 +1,10 @@
 [
-	{
-		"caption": "JaiTools: Read Me",
-		"command": "open_jai_tools_readme"
-	}
+  {
+    "caption": "JaiTools: Read Me",
+    "command": "open_jai_tools_readme"
+  },
+  {
+    "caption": "JaiTools: Generate Build System for Project",
+    "command": "generate_jai_build_system"
+  }
 ]

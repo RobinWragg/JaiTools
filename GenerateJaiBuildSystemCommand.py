@@ -1,13 +1,17 @@
 import sublime
 import sublime_plugin
-import os
 
-# rwtodo: Check for jai exe and 'JaiTools couldn't build your code because the Jai compiler was not found. To fix this, add the compiler to your PATH environment variable.'
+# rwtodo: don't forget to update the readme when this is done!
 
 class GenerateJaiBuildSystemCommand(sublime_plugin.WindowCommand):
-	def run(self):
-		pass
-		# rwtodo: ask for build command 'jai myfile.jai'
+  def run(self):
+    # check a .sublime-project file exists
+    # ask for build file
+    # if a build system exists, ask if we should overwrite it
+    # Copy the contents of Jai.sublime-build into the right spot, modifying the "shell_cmd" line
+    print('rwtodo')
+    
+    # rwtodo: Jai.sublime-build needs that syntax highlighting thing.
 
 
 

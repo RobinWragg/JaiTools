@@ -2,7 +2,7 @@
 <plist version="1.0">
 <dict>
   <key>scope</key>
-  <string>source.jai meta.function - meta.block, source.jai meta.variable - meta.block, source.jai meta.struct - meta.block</string>
+  <string>source.jai meta.function, source.jai meta.variable - meta.block, source.jai meta.struct - meta.block</string>
   <key>settings</key>
   <dict>
     <key>showInSymbolList</key>
