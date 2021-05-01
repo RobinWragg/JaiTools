@@ -68,17 +68,23 @@ class Autocompleter(sublime_plugin.EventListener):
         return view
     return None
   
+  def get_ui_name_for_key(self, cache_key):
+    if isinstance(cache_key, str):
+      return os.path.basename(cache_key)
+    else:
+      return '(unsaved)'
+  
   def get_completions_from_cache_key(self, cache_key):
     if self.max_trigger_length == -1:
       # rwtodo: add a menu option to open JaiTools.sublime-settings the same way Package Control does it.
       settings = sublime.load_settings('JaiTools.sublime-settings')
       self.max_trigger_length = settings.get('completions_popup_max_width', 1000)
     
+    ui_name = self.get_ui_name_for_key(cache_key)
     completions = None
     
     if isinstance(cache_key, str):
       # cache_key is a file path.
-      ui_name = os.path.basename(cache_key)
       text = self.get_file_contents(cache_key)
       completions = get_completions(text, ui_name, False, self.max_trigger_length)
     else:
@@ -87,7 +93,7 @@ class Autocompleter(sublime_plugin.EventListener):
       view = self.get_view_by_buffer_id(cache_key)
       if view:
         jai_text = self.get_view_contents(view)
-        completions = get_completions(jai_text, '(unsaved)', False, self.max_trigger_length)
+        completions = get_completions(jai_text, ui_name, False, self.max_trigger_length)
     
     return completions
   
@@ -167,9 +173,11 @@ class Autocompleter(sublime_plugin.EventListener):
     
     # Add the active view's completions to the completions list
     jai_text = self.get_view_contents(view)
-    completions += get_completions(jai_text, 'rwtodo', True, self.max_trigger_length)
+    ui_name = self.get_ui_name_for_key(active_view_key)
+    completions += get_completions(jai_text, ui_name, True, self.max_trigger_length)
     
-    # rwtodo: filter out identifiers that don't contain 'prefix'. Design the cache to make this fast.
+    # Filter out identifiers that don't contain 'prefix'. This helps Sublime Text sort them.
+    completions = list(filter(lambda c: prefix in c[0], completions))
     
     return completions
 
