@@ -392,4 +392,20 @@ render_submit :: (sub: Submission, matrix := matrix4_identity()) {
   submit(sub, master_matrix);
 }
 
+get_path_of_running_executable :: () -> string /* Temporary Storage */ {
+//                                             ^^^^^^^^^^^^^^^^^^^^^^^ comment.block.jai
+    BUFFER_SIZE :: 4096;   // @StaticBuffer @Robustness
+    buf: [BUFFER_SIZE] u8;
+
+    length := readlink("/proc/self/exe", buf.data, BUFFER_SIZE);
+    if length < 0 return "";
+
+    out: string;
+    out.data = Basic.alloc(length, Basic.__temporary_allocator);
+    out.count = length;
+    memcpy(out.data, buf.data, length);
+
+    return out;
+}
+
 #run main();
