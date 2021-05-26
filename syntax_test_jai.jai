@@ -336,8 +336,8 @@ a_mathy_procedure :: (m: Matrix4, v: Vector3) {
 //^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 //                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.line.jai
       POLYMORPH_MATCH       :: 0x1;
-//        ^^^^^^^^^^^^^^^ variable.other.jai
-                               ^^^ constant.numeric.jai
+//    ^^^^^^^^^^^^^^^ variable.other.jai
+//                             ^^^ constant.numeric.jai
       POLYMORPH_DEDUPLICATE :: 0x2;
       AUTO_VALUE_BAKE       :: 0x4;
   }
@@ -381,7 +381,7 @@ main :: () {
 
   x_tris :: Vector3.[
 //          ^^^^^^^ storage.type.jai
-    Vector3.{1.0, 0.0, 0.0}, Vector3.{}, Vector3.{0.0, 0.1, 0.0}, Vector3.{1.0, 0.0, 0.0}, Vector3.{}, Vector3.{0.0, 0.0, 0.1}
+    Vector3.{1.0, 0.0, 0.0}, Vector3.{}
   ];
 }
 
