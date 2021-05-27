@@ -408,4 +408,13 @@ get_path_of_running_executable :: () -> string /* Temporary Storage */ {
     return out;
 }
 
+log_error :: (format_string: string, args: .. Any) {
+//                                         ^^ keyword.operator.jai
+}
+
+// from Matrix.jai
+inverse :: (m: Matrix4) -> Matrix4 #must, bool {
+//                                        ^^^^ storage.type.jai
+}
+
 #run main();
