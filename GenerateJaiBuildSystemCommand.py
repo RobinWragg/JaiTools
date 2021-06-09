@@ -4,7 +4,12 @@ import json
 import subprocess
 
 # rwtodo: don't forget to update the readme when this is done!
-# rwtodo: weirdness is happening with the order of stdout and stderr
+
+# rwtodo: weirdness is happening with the order of stdout and stderr.
+#   https://stackoverflow.com/a/60232612
+#   https://twitter.com/marcan42/status/1382970174773424133
+#   https://bugs.eclipse.org/bugs/show_bug.cgi?id=9720
+#   https://forum.sublimetext.com/t/different-priorisation-of-logging-and-print-message-outputs/25537
 
 class GenerateJaiBuildSystemCommand(sublime_plugin.ApplicationCommand):
   def run(self):
