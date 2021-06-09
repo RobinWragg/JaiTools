@@ -417,4 +417,17 @@ inverse :: (m: Matrix4) -> Matrix4 #must, bool {
 //                                        ^^^^ storage.type.jai
 }
 
+
+// From Basic/module.jai
+Construct :: (memory: *void, $T: Type) {
+    ini :: initializer_of(T);
+
+    #if ini {
+        inline ini(memory);
+//      ^^^^^^ keyword.other.jai
+    } else {
+        memset(memory, 0, size_of(T));
+    }
+}
+
 #run main();
