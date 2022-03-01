@@ -3,6 +3,10 @@ import sublime_plugin
 import os
 from .autocomplete_parser import get_completions
 
+# rwtodo: Include completions from the Basic module in completion results. Do this in a module-agnostic way so we can more easily add other modules in the future if we choose to.
+# rwtodo: Consider ST4 autocompletion features.
+# rwtodo: Investigate ST4 tests for re-indenting to solve that issue when typing if x {\n\n}\nelse<space>
+
 class Autocompleter(sublime_plugin.EventListener):
   completion_cache = {}
   cache_initialized = False

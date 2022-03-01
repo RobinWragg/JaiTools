@@ -73,7 +73,7 @@ def get_completions(text, ui_file_name, is_active_file, max_proc_length, current
   
   return completions
 
-all_words_pattern = re.compile(r'`?\w{4,}')
+all_words_pattern = re.compile(r'\b\w{4,}')
 def _get_all_words(text, ignore_line):
   lines = text.split('\n')
   del lines[ignore_line]
