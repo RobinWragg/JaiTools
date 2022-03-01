@@ -6,10 +6,9 @@
 //               ^ punctuation.terminator.jai
 
 THE_STRING :: #string DONE
+//            ^^^^^^^ meta.preprocessor.jai
 This is a herestring.
 DONE
-
-
 
   my_var := 42;
 //^^^^^^ variable.other.jai
@@ -76,15 +75,17 @@ DONE
 //                       ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
-  my_func_0 :: () {
+  my_func_1 :: (my_param: int) {
 //^^^^^^^^^ entity.name.function.jai
 //          ^^ keyword.operator.assignment.jai
 //             ^ punctuation.section.parameters.begin.jai
-//              ^ punctuation.section.parameters.end.jai
-//                ^ meta.block.jai
-//^^^^^^^^^^^^^^^ meta.function.jai
+//              ^^^^^^^^ variable.parameter.jai
+//                      ^ keyword.operator.assignment.jai
+//                        ^^^ storage.type.jai
+//                           ^ punctuation.section.parameters.end.jai
+//                             ^ meta.block.jai
   }
-//^ meta.block.jai
+//^ meta.block.jai punctuation.section.block.end.jai
 
   my_func_1 :: (my_param: int) {
 //^^^^^^^^^ entity.name.function.jai
@@ -95,7 +96,6 @@ DONE
 //                        ^^^ storage.type.jai
 //                           ^ punctuation.section.parameters.end.jai
 //                             ^ meta.block.jai
-//^^^^^^^^^^^^^ meta.function.jai
   }
 //^ meta.block.jai
 
@@ -114,7 +114,6 @@ DONE
 //                                                  ^^^^^ storage.type.jai
 //                                                       ^ punctuation.section.parameters.end.jai
 //                                                         ^ meta.block.jai
-//^^^^^^^^^^^^^ meta.function.jai
   }
 //^ meta.block.jai
 
@@ -128,8 +127,8 @@ DONE
 //                               ^ keyword.operator.assignment.jai
 //                                 ^^^^^^ storage.type.jai
 //                                                       ^ meta.block.jai
-//^^^^^^^^^^^^^^^^^ meta.function.jai
     return "ewf", 354;
+//  ^^^^^^ keyword.control.jai
   }
 //^ meta.block.jai
 
@@ -150,7 +149,6 @@ DONE
 //                                                         ^^ keyword.other.jai
 //                                                            ^^^^^^ storage.type.jai
 //                                                                   ^ meta.block.jai
-//^^^^^^^^^^^^^ meta.function.jai
   }
 //^ meta.block.jai
 
@@ -173,18 +171,31 @@ to_c_string :: (s: string) -> *u8 {
 //                              ^ punctuation.section.parameters.end.jai
 }
 
-multi_line_func_0 :: (
-	my_param_0: Abcdefe,
-	my_param_1: [] float) -> string
-{
-	
-}
+  multi_line_func_0 :: (
+//^^^^^^^^^^^^^^^^^ entity.name.function.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ punctuation.section.parameters.begin.jai
+  my_param_0: Abcdefe,
+//^^^^^^^^^^ variable.parameter.jai
+//          ^ keyword.operator.assignment.jai
+//            ^^^^^^^ storage.type.jai
+//                   ^ punctuation.separator.jai
+  my_param_1: [] float) -> string
+//^^^^^^^^^^ variable.parameter.jai
+//          ^ keyword.operator.assignment.jai
+//            ^ punctuation.section.brackets.begin.jai
+//             ^ punctuation.section.brackets.end.jai
+//               ^^^^^ storage.type.jai
+//                    ^ punctuation.section.parameters.end.jai
+//                      ^^ keyword.other.jai
+//                         ^^^^^^ storage.type.jai
+{}
 
 multi_line_func_1 :: (my_param_0: Abcdefe,
-	my_param_1: [] float
-	) -> string
+  my_param_1: [] float
+  ) -> string
 {
-	
+  
 }
 
 multi_line_func_1(f, 4);
@@ -213,14 +224,14 @@ multi_line_func_1(f, 4);
 //                            ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
 
-// rwtodo: annotate
+// todo: annotate
 operator + :: (a: My_Struct, b: My_Struct) -> My_Struct {
   out : My_Struct = ---;
   out.member = a.member + b.member;
   return out;
 }
 
-// rwtodo: annotate
+// todo: annotate
 operator += :: (a: My_Struct, b: float) -> int {
   return 23_5;
 }
@@ -249,7 +260,11 @@ operator += :: (a: My_Struct, b: float) -> int {
     return second = "Dolly";
 }
 
-varfunc := ()
+  varfunc := ()
+//^^^^^^^ entity.name.function.jai
+//        ^^ keyword.operator.assignment.jai
+//           ^ punctuation.section.parameters.begin.jai
+//            ^ punctuation.section.parameters.end.jai
 {
   
 }
@@ -261,6 +276,39 @@ varfunc := ()
 //              ^^^^ storage.type.jai
 //                   ^^ storage.type.jai
 //                      ^ meta.block.jai punctuation.section.block.begin.jai
+    NO_OUTPUT       :: 0;
+//  ^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
+    EXECUTABLE      :: 1;
+//  ^^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
+    DYNAMIC_LIBRARY :: 2;
+//  ^^^^^^^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
+    STATIC_LIBRARY  :: 3;
+//  ^^^^^^^^^^^^^^ variable.other.jai
+//                  ^^ keyword.operator.assignment.jai
+//                     ^ constant.numeric.jai
+//                      ^ punctuation.terminator.jai
+  } = .EXECUTABLE;
+//^ meta.block.jai punctuation.section.block.end.jai
+//    ^ punctuation.accessor.jai
+//     ^^^^^^^^^^ variable.other.jai
+//               ^ punctuation.terminator.jai
+
+// Non-anonymous version
+  Output_Type :: enum u8 {
+//^^^^^^^^^^^ variable.other.jai
+//            ^^ keyword.operator.assignment.jai
+//               ^^^^ storage.type.jai
+//                    ^^ storage.type.jai
+//                       ^ meta.block.jai punctuation.section.block.begin.jai
     NO_OUTPUT       :: 0;
 //  ^^^^^^^^^ variable.other.jai
 //                  ^^ keyword.operator.assignment.jai
@@ -378,13 +426,23 @@ main :: () {
 //              ^^^^^^^^^^^^^^^^^ meta.function-call.jai
 //                                         ^ punctuation.terminator.jai
 //^^^^^^^^^^^^^^^^^^^^^^^^ meta.variable.jai
-
+  
   x_tris :: Vector3.[
 //          ^^^^^^^ storage.type.jai
+//                 ^ punctuation.accessor.jai
+//                  ^ punctuation.section.brackets.begin.jai
     Vector3.{1.0, 0.0, 0.0}, Vector3.{}
+//  ^^^^^^^ storage.type.jai
+//         ^ punctuation.accessor.jai
+//          ^ punctuation.section.block.begin.jai
+//                        ^ punctuation.section.block.end.jai
+//                           ^^^^^^^ storage.type.jai
   ];
+//^ punctuation.section.brackets.begin.jai
+// ^ punctuation.terminator.jai
 }
 
+// todo: annotate
 platform_clear : (colorrr: v3) -> () : clear;
 
 render_submit :: (sub: Submission, matrix := matrix4_identity()) {
@@ -414,9 +472,10 @@ log_error :: (format_string: string, args: .. Any) {
 
 // from Matrix.jai
 inverse :: (m: Matrix4) -> Matrix4 #must, bool {
+//                                 ^^^^^ meta.preprocessor.jai
+//                                      ^ punctuation.separator.jai
 //                                        ^^^^ storage.type.jai
 }
-
 
 // From Basic/module.jai
 Construct :: (memory: *void, $T: Type) {
@@ -429,5 +488,44 @@ Construct :: (memory: *void, $T: Type) {
         memset(memory, 0, size_of(T));
     }
 }
+
+// Basic parameterized struct
+  MyParamStruct :: struct (param1: int, param2: float) {
+//^^^^^^^^^^^^^ variable.other.jai
+//              ^^ keyword.operator.assignment.jai
+//                        ^ punctuation.section.parameters.begin.jai
+//                         ^^^^^ variable.parameter.jai
+//                               ^ keyword.operator.assignment.jai
+//                                 ^^^ storage.type.jai
+//                                    ^ punctuation.separator.jai
+//                                      ^^^^^^ variable.parameter.jai
+//                                            ^ keyword.operator.assignment.jai
+//                                              ^^^^^ storage.type.jai
+//                                                   ^ punctuation.section.parameters.end.jai
+//                                                     ^ meta.block.jai
+  }
+
+  MatrixType :: struct(
+//^^^^^^^^^^ variable.other.jai
+//           ^^ keyword.operator.assignment.jai
+//              ^^^^^^ storage.type.jai
+//                    ^ punctuation.section.parameters.begin.jai
+    matrix_type: Type, 
+//  ^^^^^^^^^^^ variable.parameter.jai
+    data_type: Type,
+    N: int,
+    M: int,
+    flags: MATRIX_FLAGS,
+    get: (m: matrix_type, int, int) -> data_type,
+//       ^ punctuation.section.parameters.begin.jai
+//                                ^ punctuation.section.parameters.end.jai
+    set: (m: *matrix_type, int, int, data_type) -> ()
+//       ^ punctuation.section.parameters.begin.jai
+//                                            ^ punctuation.section.parameters.end.jai
+  ){}
+//^ punctuation.section.parameters.end.jai
+// ^ meta.block.jai punctuation.section.block.begin.jai
+//  ^ meta.block.jai punctuation.section.block.end.jai
+
 
 #run main();

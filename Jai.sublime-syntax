@@ -5,14 +5,13 @@
 # Official scope names: https://www.sublimetext.com/docs/3/scope_naming.html
 
 # TODO:
-# 'inline' keyword (e.g. Simple_String.jai)
-# Proc return-type scoping
-# Show #scope_export and #scope_file in file-local Goto Symbol view (ctrl/cmd+R) but not in Goto Symbol In Project.
-# Handle 'inline' keyword in proc headers.
-# Proc headers that don't have bodies.
+# Proc headers that don't have bodies
 # Unions
 
+version: 2
+
 name: Jai
+
 file_extensions:
   - jai
 
@@ -22,7 +21,7 @@ variables:
   name: '(?:\b|\$+)[a-zA-Z_]\w*'
   herestring_delimiter: '[\w\W]+?(?=\s)'
   commented_line: '//.*|/\*.*'
-  operator_symbol: '[*+-/](?:=)?' # rwtodo: This might not be complete.
+  operator_symbol: '[*+-/](?:=)?' # todo: This might not be complete.
 
 contexts:
   main:
@@ -68,13 +67,11 @@ contexts:
   constant_expression:
     - include: string_literal
     - include: struct_literal
+    - include: array_literal
     - include: preprocessor_statement
     - include: boolean_constant
     - include: non_assignment_operator
     - include: numeric_constant
-    - match: '{'
-      scope: punctuation.section.block.begin.jai
-      push: block
   
   for_or_while_loop:
     - match: '\b(?:for|while)\b'
@@ -99,27 +96,15 @@ contexts:
           pop: true
   
   preprocessor_statement:
-    - match: '#import|#load'
+    - match: '(?:#import|#load)'
       scope: keyword.control.import.jai
     - match: '#\w*'
       scope: meta.preprocessor.jai
   
   keyword:
-    - match: '\breturn\b'
+    - match: '\b(?:return|break|continue|case|if|ifx|then|else)\b'
       scope: keyword.control.jai
-    - match: '\bbreak\b'
-      scope: keyword.control.jai
-    - match: '\bcontinue\b'
-      scope: keyword.control.jai
-    - match: '\bcase\b'
-      scope: keyword.control.jai
-    - match: '\b(?:if|ifx|then|else)\b'
-      scope: keyword.control.jai
-    - match: '\b(?:using|xx|push_context|defer)\b'
-      scope: keyword.other.jai
-    - match: '---'
-      scope: keyword.other.jai
-    - match: '\b(?:it|it_index)\b'
+    - match: '\b(?:using|xx|push_context|defer|it|it_index|inline)\b|---'
       scope: keyword.other.jai
             
   assignment_operator:
@@ -137,12 +122,18 @@ contexts:
       scope: keyword.operator.jai
   
   variable_declaration:
-    - match: '{{name}}\s*(?=:)'
+    - match: '{{name}}(?=\s*:)'
       scope: variable.other.jai
       push:
         - meta_scope: meta.variable.jai
+        # Parameterized structs
+        - match: '(::)\s*(struct)(?=\s*\()'
+          captures:
+            1: keyword.operator.assignment.jai
+            2: storage.type.jai
+          push: parameter_list
         # Anonymous structs and enums
-        - match: '(:)\s*(struct|(?:enum|enum_flags)\s+{{name}})\s*(?=\{)'
+        - match: '(:)\s*(struct|(?:enum|enum_flags)\s+{{name}})(?=\s*\{)'
           captures:
             1: keyword.operator.assignment.jai
             2: storage.type.jai
@@ -156,10 +147,9 @@ contexts:
               pop: true
             - match: '(?=;)'
               pop: true
-        - match: '\s*#string'
-          scope: meta.preprocessor.jai
+        - match: '(?=#)'
           pop: true
-        - match: '(?=\s*{)'
+        - match: '(?=\s*{)' # End the meta_scope before the final whitespace
           pop: true
         - match: ';'
           scope: punctuation.terminator.jai
@@ -167,17 +157,25 @@ contexts:
         - include: main
   
   builtin_type:
-    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64|struct|enum)\b'
+    - match: '\b(?:Any|void|string|bool|float|float32|float64|int|u8|u16|u32|u64|s8|s16|s32|s64|struct|enum|enum_flags)\b'
       scope: storage.type.jai
   
   full_type:
+    - match: '\.\.'
+      scope: keyword.operator.jai
     - match: '\*'
       scope: keyword.operator.jai
     - include: array_subscript
     - include: builtin_type
     - match: '{{name}}'
       scope: storage.type.jai
-    - include: preprocessor_statement
+    # Match function types
+    - match: '(?=\()'
+      # Here we're treating return lists as parameter lists.
+      # It's a hacky shortcut but it works for now.
+      push: parameter_list
+    - match: '->'
+      scope: keyword.other.jai
   
   array_subscript:
     - match: '\['
@@ -208,7 +206,6 @@ contexts:
     - match: '(?<=#string)\s+({{herestring_delimiter}})'
       captures:
         1: keyword.string-delimiter.jai
-      # scope: meta.preprocessor.jai
       embed: herestring_content
       escape: '(\1)'
       escape_captures:
@@ -235,32 +232,41 @@ contexts:
         2: punctuation.accessor.jai
         3: punctuation.section.block.begin.jai
       push:
-        - include: constant_expression
+        - include: main
         - match: '}'
           scope: punctuation.section.block.end.jai
           pop: true
   
+  array_literal:
+    - match: '({{name}})(\.)(\[)'
+      captures:
+        1: storage.type.jai
+        2: punctuation.accessor.jai
+        3: punctuation.section.brackets.begin.jai
+      push:
+        - match: '\]'
+          scope: punctuation.section.brackets.begin.jai
+          pop: true
+        - include: main
+
   # Matches the start of a procedure declaration. This includes operator procedures.
   proc_declaration:
     - match: '{{name}}(?=\s*(?:{{operator_symbol}}\s*)?:\s*[:=]\s*(?:#\w*|inline)?\s*\(\s*(?:using)?\s*(?:{{name}}\s*:|//|\)|$))'
       scope: entity.name.function.jai
       push: proc_declaration_post_name
   
-  # Matches part of a procedure declaration, starting with :: or := and ending before the opening '{'.
+  # Matches part of a procedure declaration, starting with :: or := and ending before the opening '{', ';' etc.
   proc_declaration_post_name:
-    - meta_scope: meta.function.jai
     - match: '->'
-      scope: keyword.other.jai # TODO: enter return-list scope
+      scope: keyword.other.jai
       push: proc_declaration_return_list
     - include: non_assignment_operator
     - include: assignment_operator
     - match: '\binline\b'
       scope: keyword.other.jai
-    - match: '#\w*'
-      scope: meta.preprocessor.jai
     - match: '(?=\()'
       push: parameter_list
-    - match: '\s*(?={|;|#\w*)'
+    - match: '(?={|;|#\w*)'
       pop: true
   
   parameter_list: # This is for procedures and structs.
@@ -288,26 +294,29 @@ contexts:
             - include: constant_expression
             - match: '(?=,|\))'
               pop: true
+    - include: full_type
     - match: '\)'
       scope: punctuation.section.parameters.end.jai
       pop: true
   
   proc_declaration_return_list:
+    - include: comment
+    - include: preprocessor_statement
     - match: '({{name}})\s*(:)'
       captures:
         1: variable.other.jai
         2: keyword.operator.assignment.jai
     - include: full_type
     # Default return values:
-    - match: '\s*=\s*'
+    - match: '='
       scope: keyword.operator.assignment.jai
       push:
-        - include: constant_expression
-        - match: '\s*(?=,|{|,|#\w*)'
+        - match: '(?=,|{|#\w*)'
           pop: true
+        - include: constant_expression
     - match: ','
       scope: punctuation.separator.jai
-    - match: '\s*(?={|;|#\w*)'
+    - match: '(?={|;)'
       pop: true
 
 
