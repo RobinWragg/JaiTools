@@ -2,7 +2,7 @@
 
 Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the Jai language in Sublime Text. Thank you to GreenLightning for their contributions.
 
-Sorry, I am no longer developing this as I no longer use Sublime Text.
+Sorry, I am no longer developing this as I no longer use Sublime Text. Get in touch if you are interested in taking ownership or becoming a collaborator if this repo.
 
 ## Usage
 
@@ -15,7 +15,5 @@ Begin typing a procedure call to view the matching symbols in your project. Type
 ### Goto
 
 Goto Symbol (ctrl+R/cmd+R) shows all the top-level symbols in the file including procedure parameters, so you can easily tell the difference between multiple overloaded procedures. Goto Symbol in Project (shift+ctrl+R/shift+cmd+R) shows all top-level symbols in your project, but doesn't show procedure parameters (yet).
-
-Suggestions, issues, pull requests and other contributions are very welcome!
 
 
