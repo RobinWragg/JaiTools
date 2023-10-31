@@ -1,10 +1,8 @@
 # JaiTools
 
-Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the Jai language in Sublime Text 3. Thank you to GreenLightning for their contributions.
+Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the Jai language in Sublime Text. Thank you to GreenLightning for their contributions.
 
-As you probably know, this language is not officially released yet, but the demonstrations of the language by Jonathan Blow and Abner Coimbre have been very promising, so the purpose of this package is to help people hit the ground running when the language is released.
-
-All present and future features of JaiTools will always be exceedingly simple to use. This package strives to never interrupt your flow or waste your battery. Of course, JaiTools will be continually updated as the language evolves.
+Sorry, I am no longer developing this as I no longer use Sublime Text.
 
 ## Usage
 
