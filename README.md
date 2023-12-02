@@ -2,8 +2,6 @@
 
 Syntax highlighting, autocompletion, and Goto Symbol/Anything/Definition for the Jai language in Sublime Text. Thank you to GreenLightning for their contributions.
 
-Sorry, I am no longer developing this as I no longer use Sublime Text. Get in touch if you are interested in taking ownership or becoming a collaborator if this repo.
-
 ## Usage
 
 ### Autocomplete
