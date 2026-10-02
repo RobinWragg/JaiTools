@@ -35,8 +35,8 @@ contexts:
     - match: '{'
       scope: punctuation.section.block.begin.jai
       push: block
-    - include: variable_declaration
     - include: for_or_while_loop
+    - include: variable_declaration
     - include: keyword
     - include: non_assignment_operator
     - include: assignment_operator
@@ -80,6 +80,10 @@ contexts:
         - include: constant_expression
         - include: array_subscript
         - include: procedure_call
+        - match: '(:)\s*({{name}})\s*'
+          captures:
+            1: keyword.operator.jai
+            2: variable.function.jai
         - match: '(\*)?({{name}})\s*(:)'
           captures:
             1: keyword.operator.jai
